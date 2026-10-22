@@ -172,13 +172,16 @@ class CollegaContiDialog(tk.Toplevel):
         collegati = 0
         for c in conti:
             voce, nota, tag = c["voce_bilancio"], [], ()
-            if not voce and c["padre_id"] and per_id[c["padre_id"]]["voce_bilancio"]:
-                voce, tag = per_id[c["padre_id"]]["voce_bilancio"], ("ereditata",)
-                nota.append("dal conto padre")
             proposta = self._proposte.get(c["id"])
             if proposta and not c["voce_bilancio"]:
                 voce, tag = proposta[0], ("proposta",)
                 nota.append("proposta, da confermare")
+            elif not voce and c["padre_id"]:
+                padre = per_id[c["padre_id"]]
+                voce_padre = padre["voce_bilancio"] or (self._proposte.get(padre["id"]) or (None,))[0]
+                if voce_padre:
+                    voce, tag = voce_padre, ("ereditata",)
+                    nota.append("dal conto padre" + ("" if padre["voce_bilancio"] else " (proposta)"))
             if c["rettifica"]:
                 nota.append("rettifica")
             if c["voce_bilancio_opposta"]:

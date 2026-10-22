@@ -166,7 +166,11 @@ def main():
     al = {a["codice"]: a["id"] for a in m.get_aliquote()}
     rg = {r["tipo"]: r["id"] for r in m.get_registri()}
     for es, anno, fattore in ((es_prec, 2025, 0.8), (es_c, 2026, 1.0)):
-        completo.crea_registrazione(es, f"{anno}-01-02", "Versamento soci", [(k["2501"], 10000, 0), (k["3101"], 0, 10000)]) if anno == 2025 else None
+        if anno == 2025:
+            completo.crea_registrazione(es, f"{anno}-01-02", "Versamento soci", [(k["2501"], 10000, 0), (k["3101"], 0, 10000)])
+        else:  # nuovo esercizio: saldi di apertura dal 2025
+            completo.chiudi_esercizio(es_prec, "2025-12-31")
+            completo.registra_apertura(es, es_prec, k["3199"])
         for mese in range(1, 13):
             d = f"{anno}-{mese:02d}-15"
             m.registra_documento(es, rg[VENDITE], d, f"Fattura vendita {mese}", k["2201"],
