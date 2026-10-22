@@ -1,6 +1,6 @@
 # Changelog
 
-## Non ancora rilasciato
+## 1.6 – 2026-10-22
 
 - **Interfaccia molto più veloce**: il tema Sun Valley della 1.5 rallentava ogni clic (circa 70 ms per selezionare una riga); lo stile Windows 11 ora è disegnato direttamente, con tempi di risposta 7-8 volte più bassi.
 - **Nuova scheda Partitari**: si sceglie un conto e se ne vedono i movimenti con saldo progressivo; per un conto padre, anche quelli dei sottoconti. Doppio clic su un movimento per aprirlo nel Libro Giornale; export del partitario in CSV, Excel e PDF.

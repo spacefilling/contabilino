@@ -3,13 +3,15 @@
 Programma autonomo per Windows: registra costi e ricavi in partita doppia, gestisce gli esercizi contabili, mostra i saldi dei conti ed esporta in CSV, Excel e PDF. **Non richiede installazione né Python**: un solo file da avviare.
 
 ### 🆕 Novità di questa versione
-- **Nuovo aspetto in stile Windows 11**: tema chiaro e pulito, font Segoe UI, pulsanti principali in evidenza, intestazione con il logo e l'esercizio attivo (con il pulsante **Esercizi…** per cambiarlo).
-- **Testo nitido sugli schermi con zoom** (125%, 150%…): prima Windows ingrandiva la finestra sfocandola. La finestra si adatta sempre allo schermo.
-- **Logo di Contabilino** come icona della finestra, della barra delle applicazioni e del file `Contabilino.exe`.
-- **Tendina dei conti corretta**: si chiude passando a un altro campo, con un clic in un altro punto della finestra o passando a un altro programma (prima restava aperta fino a "Pulisci").
-- Scelta dei conti da esportare con caselle di spunta in stile Windows 11.
-- Database di esempio più realistico, con incassi, pagamenti e versamenti in banca.
+- **Molto più veloce**: nella 1.5 ogni clic rallentava per colpa del tema grafico. Lo stile Windows 11 ora è disegnato direttamente e l'interfaccia risponde subito, come prima.
+- **Nuova scheda Partitari**: scegli un conto e vedi tutti i suoi movimenti con il saldo progressivo (per un conto padre anche quelli dei sottoconti). Doppio clic su un movimento per aprirlo nel Libro Giornale; pulsante Esporta per CSV, Excel e PDF.
+- **Conti e sottoconti ad albero**: nel piano dei conti, nei Saldi Conti (con il totale di ogni gruppo, da aprire e chiudere) e nella scelta dei conti da esportare. Doppio clic su un conto nei Saldi per aprire il suo partitario.
+- L'export dei Saldi Conti riporta i totali di gruppo, come la scheda.
+- **Icona**: il logo nella barra del titolo e nella barra delle applicazioni viene ora dal file `.ico` con il metodo nativo di Windows, anche nelle finestre di avvio.
+- **Proprietà del file**: `Contabilino.exe` riporta descrizione, versione e copyright di spacefiller (Proprietà → Dettagli).
 - Nessuna modifica al database: gli archivi esistenti si usano così come sono.
+
+**Se vedi ancora l'icona vecchia**: togli Contabilino dalla barra delle applicazioni e aggiungilo di nuovo; per l'icona del file in Esplora risorse esegui `ie4uinit.exe -show` dal Prompt dei comandi (o rinomina il file).
 
 ### ⬇️ Download
 Scarica **`Contabilino.exe`** dalla sezione *Assets* qui sotto.
@@ -41,5 +43,6 @@ Scarica **`Contabilino.exe`** dalla sezione *Assets* qui sotto.
 - Gestione esercizi con periodo libero, anche a cavallo tra due anni (apri/chiudi/modifica).
 - Saldi conti con verifica di quadratura Dare/Avere.
 - Riporto dei saldi tra esercizi e numerazione in ordine di data.
-- Report Costi e Ricavi e Partitari di qualsiasi conto (fornitori, clienti, banca…).
+- Report Costi e Ricavi e Partitari di qualsiasi conto (fornitori, clienti, banca…), anche da consultare in una scheda.
+- Piano dei conti e saldi ad albero, con i totali di gruppo.
 - Export CSV (compatibile Excel italiano), Excel `.xlsx` e PDF.
