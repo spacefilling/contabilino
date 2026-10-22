@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% seo %}
+  <link rel="icon" type="image/png" href="{{ '/assets/logo.png' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/assets/style.css' | relative_url }}">
+  {%- if page.url == "/" %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Contabilino",
+    "description": {{ page.description | jsonify }},
+    "url": {{ page.url | absolute_url | jsonify }},
+    "downloadUrl": {{ site.download_url | jsonify }},
+    "softwareVersion": {{ site.version | jsonify }},
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Windows",
+    "inLanguage": "it",
+    "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+    "author": { "@type": "Person", "name": {{ site.author | jsonify }} },
+    "codeRepository": {{ site.repository_url | jsonify }},
+    "image": {{ '/assets/social-preview.png' | absolute_url | jsonify }}
+  }
+  </script>
+  {%- endif %}
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="{{ '/' | relative_url }}"><img src="{{ '/assets/logo.png' | relative_url }}" alt="" width="28" height="28"> Contabilino <span class="ver">v{{ site.version }}</span></a>
+      <nav aria-label="Menu principale">
+        <a href="{{ '/' | relative_url }}">Presentazione</a>
+        <a href="{{ '/manuale/' | relative_url }}">Manuale</a>
+        <a href="{{ site.repository_url }}/releases/latest">Download</a>
+        <a href="{{ site.repository_url }}">GitHub</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap content">
+    {{ content }}
+  </main>
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Contabilino {{ site.version }} di {{ site.author }} · gratuito e open source, licenza GPL v3 · <a href="{{ site.repository_url }}">codice su GitHub</a></p>
+      <p class="small">Contabilino è fornito così com'è, senza garanzia. Non sostituisce la consulenza di un commercialista.</p>
+    </div>
+  </footer>
+</body>
+</html>

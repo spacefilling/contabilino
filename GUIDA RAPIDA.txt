@@ -1,0 +1,75 @@
+============================================================
+  CONTABILINO - Come usarlo (guida rapida)
+============================================================
+
+1) AVVIARE IL PROGRAMMA
+   Fai doppio clic su  Contabilino.exe
+   Non serve installare niente.
+
+
+2) IL PRIMO AVVIO: AVVISO DI WINDOWS (NORMALE)
+   La prima volta Windows potrebbe mostrare una finestra blu:
+   "Windows ha protetto il PC".
+
+   Non è un virus: è solo perché il programma non è firmato.
+   Per procedere:
+
+     - clicca su  "Ulteriori informazioni"
+     - poi clicca sul pulsante  "Esegui comunque"
+
+   Capita solo la prima volta.
+
+
+3) ALL'AVVIO
+   - Se nella stessa cartella c'è il file  contabilino.db , lo apre da solo.
+   - Altrimenti chiede se creare un nuovo database o aprirne uno esistente:
+       Sì      = crea un nuovo archivio
+       No      = apri un archivio già esistente
+       Annulla = esci
+
+
+4) DOVE FINISCONO I DATI
+   Tutti i dati stanno in un unico file:  contabilino.db
+   nella stessa cartella del programma.
+
+   Puoi tenere programma e dati su una chiavetta USB:
+       CHIAVETTA
+       |-- Contabilino.exe
+       |-- contabilino.db
+
+
+5) BACKUP (IMPORTANTE)
+   Per fare una copia di sicurezza basta copiare il file
+   contabilino.db  da un'altra parte (altra cartella, altra chiavetta,
+   email a te stesso...). Fallo ogni tanto.
+
+
+6) COME SI USA (in breve)
+   - Menu  Esercizio > Gestione Esercizi : crea l'esercizio indicando
+     data di inizio e data di fine. Può essere l'anno solare
+     (01/01/2026 - 31/12/2026) oppure a cavallo tra due anni
+     (es. 01/07/2026 - 30/06/2027).
+   - Scheda  Libro Giornale : registra le operazioni (data, causale,
+     conto Dare, conto Avere, importo).
+   - Per correggere una registrazione: doppio clic sulla riga (o pulsante
+     Modifica sotto la tabella), cambia i campi e premi Salva.
+   - Per cancellarla: selezionala e premi Canc (o pulsante Elimina).
+     Il programma chiede se rinumerare le registrazioni successive.
+   - In alternativa puoi fare uno Storno: si aggiunge una registrazione
+     con i conti invertiti che annulla quella sbagliata.
+   - Le registrazioni di un esercizio chiuso non si modificano e non si
+     cancellano: si possono solo stornare.
+   - Scheda  Saldi Conti : vedi i totali.
+   - Menu  Export : salva in CSV, Excel o PDF il Libro Giornale,
+     i Saldi Conti, il report Costi e Ricavi e i Partitari
+     (fornitori, clienti, banca...).
+     Si possono esportare tutti i conti o solo quelli spuntati.
+   - Nuovo esercizio: il programma chiede se riportare i saldi di
+     cassa, banca, crediti e debiti dall'esercizio precedente.
+   - Registrazione con data precedente all'ultima: il programma chiede
+     se rinumerare il giornale in ordine di data.
+
+   Per i dettagli completi vedi il file  GUIDA ESTESA.txt
+   oppure il manuale online (menu  ?  > Manuale online):
+   https://spacefilling.github.io/contabilino/manuale/
+============================================================

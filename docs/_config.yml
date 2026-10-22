@@ -1,0 +1,31 @@
+title: Contabilino
+description: >-
+  Programma gratuito per Windows di contabilità in partita doppia per piccole attività:
+  libro giornale, piano dei conti con clienti e fornitori, costi e ricavi,
+  partitari, export in CSV, Excel e PDF.
+url: https://spacefilling.github.io
+baseurl: /contabilino
+lang: it
+locale: it_IT
+author: spacefiller
+logo: /assets/logo.png
+image: /assets/social-preview.png
+version: "1.4"
+repository_url: https://github.com/spacefilling/contabilino
+download_url: https://github.com/spacefilling/contabilino/releases/latest/download/Contabilino.exe
+
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  auto_ids: true
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+      image: /assets/social-preview.png

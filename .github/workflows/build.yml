@@ -1,0 +1,58 @@
+name: Build Contabilino.exe
+
+# Si avvia quando si pubblica una versione (tag tipo v1.0.0)
+# oppure manualmente dal tab "Actions" della repo (Run workflow).
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout del codice
+        uses: actions/checkout@v4
+
+      - name: Installa Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installa dipendenze
+        run: pip install -r requirements.txt
+
+      - name: Compila l'eseguibile
+        run: pyinstaller --onefile --windowed --name Contabilino --hidden-import openpyxl main.py
+
+      # L'exe è sempre scaricabile dalla pagina del run (tab Actions > artifacts),
+      # anche per un semplice "Run workflow" senza pubblicare una versione.
+      - name: Carica l'eseguibile come artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Contabilino-windows
+          path: dist/Contabilino.exe
+
+      # Ricava il numero di versione dal tag (es. v1.1 -> 1.1) per il titolo.
+      - name: Ricava versione dal tag
+        if: startsWith(github.ref, 'refs/tags/')
+        id: ver
+        shell: bash
+        run: echo "num=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      # Se è stato pubblicato un tag (es. v1.1), allega l'exe a una Release.
+      - name: Pubblica la Release con l'exe
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Contabilino ${{ steps.ver.outputs.num }}
+          body_path: RELEASE_NOTES.md
+          files: |
+            dist/Contabilino.exe
+            GUIDA RAPIDA.txt
+            GUIDA ESTESA.txt

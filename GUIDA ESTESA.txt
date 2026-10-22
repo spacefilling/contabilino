@@ -1,0 +1,460 @@
+================================================================================
+  CONTABILINO - Contabilità in Partita Doppia per Piccole Attività
+================================================================================
+
+INDICE
+  1. Cos'è Contabilino
+  2. Requisiti e dipendenze
+  3. Avvio del programma
+  4. Creare l'eseguibile portabile (.exe)
+  5. Primo utilizzo
+  6. Registrare un'operazione
+  7. Gestione esercizi
+  8. Piano dei conti (conti e sottoconti)
+  9. Saldi conti
+  10. Export CSV, Excel e PDF
+  11. Scorciatoie da tastiera
+  12. Portabilità (chiavetta USB)
+  13. Backup
+
+
+================================================================================
+1. COS'È CONTABILINO
+================================================================================
+
+Contabilino è un programma di contabilità in partita doppia per piccole attività.
+Permette di registrare costi e ricavi, gestire esercizi annuali, consultare
+i saldi dei conti ed esportare i dati in CSV, Excel o PDF.
+
+Il database è un file SQLite separato (.db), facilmente trasportabile
+e copiabile su chiavetta USB.
+
+
+================================================================================
+2. REQUISITI E DIPENDENZE
+================================================================================
+
+Per eseguire dal sorgente Python:
+  - Python 3.10 o superiore
+  - openpyxl (per l'export Excel)
+  - reportlab (per l'export PDF)
+
+Installazione dipendenze:
+
+    pip install openpyxl reportlab
+
+Tkinter è incluso in Python per Windows, non serve installarlo.
+
+Per creare l'eseguibile (.exe):
+  - PyInstaller
+
+    pip install pyinstaller
+
+Oppure installa tutto insieme:
+
+    pip install -r requirements.txt
+
+
+================================================================================
+3. AVVIO DEL PROGRAMMA
+================================================================================
+
+Da sorgente Python:
+
+    cd contabilino
+    python main.py
+
+Da eseguibile (dopo la compilazione):
+
+    Contabilino.exe
+
+Al primo avvio:
+  - Se nella stessa cartella esiste un file "contabilino.db", lo apre
+  - Altrimenti chiede se creare un nuovo database o aprirne uno esistente
+
+
+================================================================================
+4. CREARE L'ESEGUIBILE PORTABILE (.EXE)
+================================================================================
+
+Eseguire lo script di build:
+
+    build.bat
+
+Oppure manualmente:
+
+    pip install openpyxl reportlab pyinstaller
+    pyinstaller --onefile --windowed --name Contabilino --hidden-import openpyxl main.py
+
+L'eseguibile sarà in: dist\Contabilino.exe
+
+Copia Contabilino.exe dove vuoi (anche su chiavetta USB).
+Il file .db verrà creato o cercato nella stessa cartella dell'eseguibile.
+
+
+================================================================================
+5. PRIMO UTILIZZO
+================================================================================
+
+1. Avvia il programma
+2. Crea un nuovo database (o apri uno esistente)
+3. Vai su Esercizio > Gestione Esercizi e crea un nuovo esercizio indicando
+   data di inizio e data di fine (anno solare oppure a cavallo tra due anni,
+   es. 01/07/2026 - 30/06/2027)
+4. Personalizza il piano dei conti se necessario (Conti > Gestione Piano dei
+   Conti) - ci sono già 6 conti predefiniti
+5. Inizia a registrare operazioni nel Libro Giornale
+
+
+================================================================================
+6. REGISTRARE UN'OPERAZIONE
+================================================================================
+
+La riga di input è in fondo alla scheda "Libro Giornale".
+I campi sono: Data | Causale | Conto Dare | Conto Avere | Importo
+
+Flusso di inserimento rapido:
+
+  1. DATA
+     Scrivi la data in formato compatto: 20260212
+     Al Tab diventa automaticamente: 12/02/2026
+     Accetta anche 12022026 (giorno-mese-anno) o 12/02/2026 direttamente.
+
+  2. CAUSALE
+     Inizia a scrivere: appare un dropdown con le causali già usate.
+     Puoi selezionare con le frecce + Enter, oppure scrivere testo libero.
+
+  3. CONTO DARE
+     Inizia a scrivere il codice o il nome del conto (es. "cas" per Cassa,
+     "400" per Costi generali). Seleziona dal dropdown con frecce + Enter/Tab.
+
+  4. CONTO AVERE
+     Come sopra.
+
+  5. IMPORTO
+     Funziona come un registratore di cassa:
+       10000  →  100,00
+       1500   →  15,00
+       500    →  5,00
+       50     →  0,50
+     Solo cifre, la virgola si inserisce da sola.
+
+  6. Premi ENTER sull'importo (o clicca Salva) per registrare.
+     I campi si puliscono e il cursore torna alla data per la prossima
+     registrazione.
+
+Esempi di registrazioni tipiche:
+
+  Costo (acquisto materiale 150 euro pagato in contanti):
+    Dare: 400 - Costi generali    Avere: 100 - Cassa    Importo: 150,00
+
+  Ricavo (vendita servizio 500 euro incassato su banca):
+    Dare: 110 - Banca    Avere: 500 - Ricavi generali    Importo: 500,00
+
+CORREGGERE, ELIMINARE O STORNARE UNA REGISTRAZIONE
+
+Seleziona la registrazione nella tabella: sotto la tabella si attivano i
+pulsanti Modifica, Elimina e Storno (gli stessi comandi sono nel menu del
+tasto destro).
+
+  MODIFICA  (doppio clic sulla riga, oppure Invio)
+    La registrazione viene caricata nella riga di input, che diventa
+    "Modifica registrazione n. ...". Correggi i campi e premi Salva
+    (o Enter sull'importo): il numero resta lo stesso.
+    Esc (o il pulsante Annulla) rinuncia alla modifica.
+    Nell'importo: Canc azzera il valore, Backspace toglie l'ultima cifra.
+
+  ELIMINA  (tasto Canc)
+    La finestra di conferma mostra tutti i dati della registrazione e
+    chiede cosa fare della numerazione:
+      - Lascia i numeri come sono: il numero eliminato resta libero
+        (es. 11, 13, 14...)
+      - Rinumera: le registrazioni successive scalano di un numero
+        (13 diventa 12, 14 diventa 13...) e non restano buchi.
+        Attenzione: cambiano i numeri di registrazioni che potresti aver
+        già esportato o stampato, e i numeri citati nelle causali degli
+        storni ("Storno reg. n. ...") non vengono aggiornati.
+    L'eliminazione è definitiva.
+
+  STORNO
+    Invece di cancellare, aggiunge una nuova registrazione con gli stessi
+    conti invertiti (il conto Dare diventa Avere e viceversa) e lo stesso
+    importo: l'effetto sui saldi si annulla, e nel giornale restano sia
+    l'originale sia lo storno. La causale proposta è
+    "Storno reg. n. ... del ..." e si può cambiare.
+    Lo storno va nell'esercizio che contiene la data scelta, che deve
+    essere aperto. La data proposta è oggi se cade nello stesso esercizio,
+    altrimenti la data dell'originale; se l'esercizio dell'originale è
+    chiuso, viene proposta la data di oggi.
+
+NUMERAZIONE IN ORDINE DI DATA
+  Il numero di una nuova registrazione è il successivo all'ultimo. Se
+  registri un'operazione con una data precedente a registrazioni già
+  inserite (es. una fattura arrivata in ritardo), dopo il salvataggio il
+  programma chiede se rinumerare le registrazioni dell'esercizio in ordine
+  di data. Lo stesso comando è nel menu Esercizio > Rinumera in ordine di
+  data (solo per esercizi aperti).
+  Rinumerando cambiano i numeri già stampati o esportati, e i numeri
+  citati nelle causali degli storni restano quelli vecchi: conviene
+  rinumerare prima di stampare il giornale definitivo.
+
+ESERCIZI CHIUSI: le loro registrazioni non si possono modificare né
+eliminare. Puoi riaprire l'esercizio (Esercizio > Gestione Esercizi >
+Chiudi/Riapri) oppure stornare la registrazione in un esercizio aperto.
+
+
+================================================================================
+7. GESTIONE ESERCIZI
+================================================================================
+
+Menu: Esercizio > Gestione Esercizi
+
+  - Nuovo: crea un esercizio indicandone il periodo
+  - Modifica: cambia descrizione e date di un esercizio esistente
+  - Chiudi/Riapri: chiude o riapre un esercizio, con conferma
+    (in un esercizio chiuso non si possono aggiungere, modificare o
+    eliminare registrazioni, che si possono solo stornare, e non se ne
+    può cambiare il periodo)
+  - Elimina: cancella un esercizio (solo se non ha registrazioni)
+  - Riporta saldi: registra all'inizio dell'esercizio i saldi di apertura
+    presi dall'esercizio precedente (vedi sotto)
+  - Seleziona: cambia l'esercizio attivo (anche con doppio clic)
+
+PERIODO DELL'ESERCIZIO
+
+L'esercizio NON deve per forza coincidere con l'anno solare: si indicano
+una data di inizio e una data di fine, quindi può essere anche a cavallo
+tra due anni.
+
+  Esempi validi:
+    01/01/2026 - 31/12/2026   (anno solare)
+    01/07/2026 - 30/06/2027   (a cavallo tra due anni)
+    01/09/2026 - 31/08/2027
+
+Nella finestra "Nuovo Esercizio":
+
+  - Scrivi la data di inizio: la data di fine viene proposta
+    automaticamente a dodici mesi meno un giorno (puoi cambiarla).
+  - I pulsanti "Anno solare" e "1 luglio - 30 giugno" compilano
+    le date con un clic.
+  - La descrizione viene proposta in automatico (es. "Esercizio 2026/2027")
+    ma puoi scrivere quella che preferisci.
+
+Regole:
+
+  - La data di fine deve essere successiva alla data di inizio.
+  - Due esercizi non possono sovrapporsi: se il periodo si accavalla con
+    un altro esercizio il programma lo segnala e non salva.
+  - Le registrazioni devono avere una data compresa nel periodo
+    dell'esercizio attivo, altrimenti il programma avvisa e non salva.
+
+RIPORTO DEI SALDI
+
+Ogni esercizio conta solo i propri movimenti: senza riporto Cassa, Banca,
+crediti e debiti del nuovo esercizio partono da zero. Quando crei un
+esercizio e il precedente ha saldi di attivo e passivo, il programma chiede
+se riportarli; si può fare anche dopo con il pulsante "Riporta saldi...".
+
+La finestra mostra i saldi da registrare e chiede il conto di patrimonio
+netto da usare come contropartita: uno esistente di tipo PASSIVO oppure uno
+nuovo (proposto: 290 - Patrimonio netto). Per ogni conto di attivo e
+passivo con saldo diverso da zero viene creata una registrazione
+"Saldo di apertura" al primo giorno dell'esercizio:
+  - conto di attivo:  Dare conto, Avere Patrimonio netto
+  - conto di passivo: Dare Patrimonio netto, Avere conto
+Il patrimonio netto riceve la differenza tra attività e passività, cioè
+il capitale più gli utili accumulati. I conti di costo e ricavo non si
+riportano. Conviene riportare quando l'esercizio precedente è completo
+(meglio chiuso): le aperture non si aggiornano da sole se poi cambi le
+registrazioni dell'esercizio precedente.
+
+L'esercizio selezionato è mostrato in alto a destra nella finestra, con il
+suo periodo. Tutte le operazioni (registrazioni, saldi, export) si
+riferiscono all'esercizio attivo. All'avvio il programma seleziona da solo
+l'esercizio aperto che contiene la data odierna.
+
+
+================================================================================
+8. PIANO DEI CONTI (CONTI E SOTTOCONTI)
+================================================================================
+
+Menu: Conti > Gestione Piano dei Conti
+
+Conti predefiniti:
+  100 - Cassa              (ATTIVO)
+  110 - Banca              (ATTIVO)
+  200 - Debiti fornitori   (PASSIVO)
+  300 - Crediti clienti    (ATTIVO)
+  400 - Costi generali     (COSTO)
+  500 - Ricavi generali    (RICAVO)
+
+Puoi aggiungere, modificare o eliminare conti.
+
+SOTTOCONTI:
+  Seleziona un conto padre e clicca "Nuovo sottoconto" per creare
+  un sottoconto. Esempio:
+
+    400 - Costi generali
+      401 - Molino Valle Verde S.r.l.     (un fornitore)
+      402 - Energia Nord S.p.A.           (un fornitore)
+      403 - Affitto laboratorio
+    500 - Ricavi generali
+      501 - Trattoria Il Portico          (un cliente)
+      502 - Bottega Gastronomica Sole     (un cliente)
+
+  Così Costi e Ricavi mostra il totale di ogni fornitore e cliente e i
+  Partitari le loro fatture. I pagamenti però passano da Banca, Cassa,
+  200 e 300: per sapere quanto resta da pagare o incassare a ciascuno,
+  crea un sottoconto per fornitore anche sotto 200 (e per cliente sotto
+  300) e registra lì fatture e pagamenti.
+
+  Il tipo (ATTIVO/PASSIVO/COSTO/RICAVO) viene ereditato dal padre.
+  I livelli sono due: un sottoconto non può avere a sua volta sottoconti.
+  I sottoconti appaiono indentati nei saldi e negli export.
+
+Note:
+  - Non puoi eliminare un conto con movimenti associati
+  - Non puoi eliminare un conto con sottoconti (elimina prima i figli)
+  - I tipi di conto sono: ATTIVO, PASSIVO, COSTO, RICAVO
+
+
+================================================================================
+9. SALDI CONTI
+================================================================================
+
+Scheda "Saldi Conti" nella finestra principale.
+
+Mostra per ogni conto:
+  - Totale Dare
+  - Totale Avere
+  - Saldo (Dare - Avere)
+
+I sottoconti sono indentati sotto il conto padre.
+In fondo alla tabella: totali generali e verifica quadratura
+(il totale Dare deve essere uguale al totale Avere).
+
+
+================================================================================
+10. EXPORT CSV, EXCEL E PDF
+================================================================================
+
+Menu: Export. Ogni voce apre un sottomenu con i tre formati: CSV, Excel, PDF.
+Gli export riguardano sempre l'esercizio selezionato.
+
+  - Libro Giornale         tutte le registrazioni (N., data, causale,
+                           conto Dare, conto Avere, importo)
+  - Saldi Conti            totale Dare, totale Avere e saldo di ogni conto
+  - Costi e Ricavi         solo i conti di tipo COSTO e RICAVO, con il
+                           risultato dell'esercizio (utile o perdita)
+  - Partitari              per ogni conto scelto (fornitore, cliente, banca,
+                           costo...) l'elenco dei movimenti
+
+COSTI E RICAVI
+  Mostra i conti di costo e di ricavo che hanno movimenti nell'esercizio,
+  con gli importi in positivo (i costi in Dare, i ricavi in Avere).
+  Un conto con sottoconti (es. 400 - Costi generali) riporta in grassetto
+  il totale del gruppo e sotto il dettaglio dei sottoconti; se ci sono
+  movimenti registrati direttamente sul conto padre, compaiono in una riga
+  a parte. In fondo: totale ricavi, totale costi e utile o perdita.
+
+PARTITARI
+  Per ogni conto: data, numero e causale della registrazione, contropartita
+  (l'altro conto della registrazione), Dare, Avere e saldo progressivo.
+  Il saldo segue il verso naturale del conto: Dare - Avere per i conti di
+  attivo e di costo, Avere - Dare per i conti di passivo e di ricavo.
+  Compaiono solo i conti che nell'esercizio hanno movimenti.
+  Nella scelta dei conti è proposta l'opzione "Solo i conti di costo e
+  ricavo".
+
+SCELTA DEI CONTI
+  Per Saldi Conti, Costi e Ricavi e Partitari, prima di salvare si sceglie
+  quali conti esportare:
+    - Tutti i conti, oppure
+    - Solo i conti spuntati nell'elenco. Per spuntarli:
+        . clic sul conto (o barra spaziatrice): spunta o toglie la spunta;
+          spuntando un conto padre si spuntano anche i suoi sottoconti
+          (es. 400 con tutti i fornitori registrati sotto 400);
+        . Codici da ... a ... e "Spunta intervallo": spunta tutti i conti
+          con il codice in quell'intervallo (es. da 401 a 449);
+        . Cerca: mostra solo i conti che contengono il testo nel codice o
+          nel nome; "Spunta tutti quelli in elenco" spunta quelli trovati.
+      I metodi si possono combinare: per esempio un intervallo di fornitori
+      più due clienti cercati per nome.
+  Per Costi e Ricavi l'elenco comprende solo i conti di costo e ricavo,
+  per Saldi Conti e Partitari tutti i conti.
+  Il PDF e l'Excel riportano in alto i conti scelti; con una selezione,
+  Costi e Ricavi calcola il risultato solo sui conti selezionati.
+  Il programma ricorda l'ultima scelta finché resta aperto.
+
+FORMATI
+  CSV    punto e virgola (;) come separatore e codifica UTF-8 con BOM,
+         compatibile con Excel italiano. Nel CSV dei partitari ogni riga
+         riporta anche codice e nome del conto, così si può filtrare.
+  Excel  titolo ed esercizio in alto, intestazioni in grassetto, importi
+         con formato numerico, righe di totale. Pronto per la stampa
+         (una pagina di larghezza).
+  PDF    pagina A4 (orizzontale per il Libro Giornale) con titolo,
+         esercizio, intestazioni ripetute su ogni pagina e numero di
+         pagina in fondo. Adatto da stampare o inviare al commercialista.
+
+Se il file da sovrascrivere è aperto in Excel o in un lettore PDF, il
+programma non riesce a salvarlo: chiudilo e ripeti l'export.
+
+
+LIMITI DA CONOSCERE
+  - Il riporto registra i saldi di apertura, ma il programma non fa le
+    scritture di chiusura né la destinazione dell'utile: il risultato
+    confluisce nel patrimonio netto.
+  - Nei Saldi Conti il saldo è sempre Dare - Avere: per i conti di
+    passivo e di ricavo un saldo normale è negativo.
+  - Se fornitori e clienti sono solo sottoconti di 400 e 500, i loro
+    partitari mostrano le fatture, non i pagamenti (vedi sezione 8).
+  - Una fattura con IVA detraibile si registra in due righe: imponibile
+    sul conto di costo, IVA su un conto "IVA a credito" (tipo ATTIVO).
+    Contabilino non tiene i registri IVA.
+  - Non è un software fiscale e non sostituisce il commercialista.
+
+
+================================================================================
+11. SCORCIATOIE DA TASTIERA
+================================================================================
+
+  Tab          Passa al campo successivo
+  Enter        Nella riga di input: conferma selezione / salva registrazione
+               Nella tabella: modifica la registrazione selezionata
+  Escape       Pulisce la riga di input (o annulla la modifica in corso)
+  Doppio clic  Modifica la registrazione
+  Canc         Elimina la registrazione selezionata nella tabella
+  Tasto destro Nella tabella: menu con Modifica, Elimina, Storno
+  Frecce su/giù   Naviga nel dropdown di autocompletamento
+
+
+================================================================================
+12. PORTABILITÀ (CHIAVETTA USB)
+================================================================================
+
+Contabilino è progettato per essere portatile:
+
+  1. Compila l'exe con build.bat
+  2. Copia dist\Contabilino.exe sulla chiavetta
+  3. (Opzionale) Copia anche un file .db esistente
+
+L'exe cerca automaticamente "contabilino.db" nella propria cartella.
+Puoi avere più database e aprirli da File > Apri Database.
+
+Struttura tipica sulla chiavetta:
+
+    E:\
+    ├── Contabilino.exe
+    └── contabilino.db
+
+
+================================================================================
+13. BACKUP
+================================================================================
+
+Il database è un singolo file .db. Per fare backup:
+  - Copia il file .db in un'altra posizione
+  - Il file può essere aperto con qualsiasi client SQLite (es. DB Browser)
+
+Si consiglia di fare una copia del file .db regolarmente.

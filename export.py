@@ -1,0 +1,631 @@
+"""
+Contabilino - Export CSV, Excel e PDF
+Libro giornale, saldi conti, costi e ricavi, partitari dei conti.
+
+Ogni report viene prima costruito come tabella (colonne e sezioni di righe),
+poi scritto nel formato scelto: CSV, Excel e PDF contengono gli stessi dati.
+Gli export leggono soltanto il database, con le stesse query delle schede.
+"""
+
+import csv
+from dataclasses import dataclass, field
+from datetime import date
+
+from dateutils import format_display as _format_date, periodo_label
+
+FORMATI = {
+    "csv": ("CSV", ".csv"),
+    "xlsx": ("Excel", ".xlsx"),
+    "pdf": ("PDF", ".pdf"),
+}
+
+TIPI_ECONOMICI = ("COSTO", "RICAVO")
+
+# Verso naturale del saldo: +1 = Dare - Avere, -1 = Avere - Dare
+SEGNO_SALDO = {"ATTIVO": 1, "COSTO": 1, "PASSIVO": -1, "RICAVO": -1}
+NATURA = {"ATTIVO": "conto di attivo", "PASSIVO": "conto di passivo",
+          "COSTO": "conto di costo", "RICAVO": "conto di ricavo"}
+
+
+# --- Struttura comune dei report ---
+
+@dataclass
+class Colonna:
+    titolo: str
+    tipo: str = "testo"  # "testo", "centro" (numeri e date) oppure "importo"
+    larghezza: float = 12  # in caratteri; nel PDF conta la proporzione tra le colonne
+
+
+@dataclass
+class Riga:
+    valori: list
+    grassetto: bool = False
+    rientro: int = 0  # livelli di rientro della colonna del nome conto (sottoconti)
+
+
+@dataclass
+class Sezione:
+    righe: list
+    titolo: str = ""
+    intestazioni: bool = True  # mostra la riga con i titoli delle colonne
+
+
+@dataclass
+class Report:
+    titolo: str
+    sottotitolo: str  # esercizio e periodo
+    colonne: list
+    sezioni: list
+    colonna_nome: int = 1  # colonna a cui si applica il rientro dei sottoconti
+    note: str = ""
+    orizzontale: bool = False  # PDF in A4 orizzontale
+    # Per il CSV: una tabella unica (intestazioni, righe) al posto delle sezioni
+    csv_piatto: tuple = None
+    nome_foglio: str = "Report"
+    vuoto: bool = field(default=False)  # nessun dato da esportare
+    filtro: str = ""  # conti scelti, se l'export non comprende tutti i conti
+
+
+def _sottotitolo(db, esercizio_id):
+    e = db.get_esercizio(esercizio_id)
+    return f"{e['descrizione']}  ({periodo_label(e['data_inizio'], e['data_fine'])})"
+
+
+def _conto(codice, nome):
+    return f"{codice} - {nome}"
+
+
+def _descrivi_selezione(db, conto_ids):
+    """Riga d'intestazione con i conti scelti ("" se l'export comprende tutti i conti)."""
+    if conto_ids is None:
+        return ""
+    scelti = set(conto_ids)
+    codici = [c["codice"] for c in db.get_conti() if c["id"] in scelti]
+    if len(codici) == 1:
+        return f"Selezione: conto {codici[0]}"
+    if len(codici) <= 12:
+        return f"Selezione: conti {', '.join(codici)}"
+    return f"Selezione: {len(codici)} conti ({', '.join(codici[:10])}, ...)"
+
+
+def _ha_movimenti(saldo):
+    return round(saldo["totale_dare"], 2) != 0 or round(saldo["totale_avere"], 2) != 0
+
+
+# --- Report ---
+
+def report_giornale(db, esercizio_id):
+    rows = db.get_giornale_export(esercizio_id)
+    righe = [
+        Riga([
+            row["numero"],
+            _format_date(row["data"]),
+            row["descrizione"],
+            _conto(row["dare_codice"], row["dare_nome"]),
+            _conto(row["avere_codice"], row["avere_nome"]),
+            row["importo"],
+        ])
+        for row in rows
+    ]
+    return Report(
+        titolo="Libro Giornale",
+        sottotitolo=_sottotitolo(db, esercizio_id),
+        colonne=[
+            Colonna("N.", "centro", 6),
+            Colonna("Data", "centro", 12),
+            Colonna("Causale", "testo", 34),
+            Colonna("Conto Dare", "testo", 26),
+            Colonna("Conto Avere", "testo", 26),
+            Colonna("Importo", "importo", 14),
+        ],
+        sezioni=[Sezione(righe)],
+        colonna_nome=None,
+        orizzontale=True,
+        nome_foglio="Libro Giornale",
+        vuoto=not righe,
+    )
+
+
+def report_saldi(db, esercizio_id, conto_ids=None):
+    rows = db.get_saldi(esercizio_id)
+    if conto_ids is not None:
+        scelti = set(conto_ids)
+        rows = [r for r in rows if r["id"] in scelti]
+    righe = []
+    tot_dare = 0
+    tot_avere = 0
+    for row in rows:
+        dare = row["totale_dare"]
+        avere = row["totale_avere"]
+        tot_dare += dare
+        tot_avere += avere
+        righe.append(Riga(
+            [row["codice"], row["nome"], row["tipo"], dare, avere, dare - avere],
+            rientro=1 if row["padre_id"] else 0,
+        ))
+    righe.append(Riga(["", "TOTALE", "", tot_dare, tot_avere, tot_dare - tot_avere], grassetto=True))
+    return Report(
+        titolo="Saldi Conti",
+        sottotitolo=_sottotitolo(db, esercizio_id),
+        colonne=[
+            Colonna("Codice", "centro", 10),
+            Colonna("Conto", "testo", 32),
+            Colonna("Tipo", "centro", 11),
+            Colonna("Totale Dare", "importo", 14),
+            Colonna("Totale Avere", "importo", 14),
+            Colonna("Saldo", "importo", 14),
+        ],
+        sezioni=[Sezione(righe)],
+        note="Saldo = Totale Dare - Totale Avere.",
+        nome_foglio="Saldi Conti",
+        vuoto=not rows,
+        filtro=_descrivi_selezione(db, conto_ids),
+    )
+
+
+def _righe_economiche(saldi, tipo, scelti=None):
+    """
+    Righe dei conti di un tipo (COSTO o RICAVO) che hanno movimenti, con il totale.
+    Importi con il segno naturale: i costi in Dare, i ricavi in Avere sono positivi.
+    Un conto con sottoconti mostra in grassetto il totale del gruppo e, sotto,
+    i sottoconti; gli eventuali movimenti registrati sul conto stesso hanno una riga a sé.
+    scelti: id dei conti da includere (None = tutti). Un conto padre non scelto
+    compare lo stesso come intestazione dei suoi sottoconti scelti.
+    """
+    segno = 1 if tipo == "COSTO" else -1
+
+    def importo(r):
+        return segno * (r["totale_dare"] - r["totale_avere"])
+
+    def diretti(r):
+        return (scelti is None or r["id"] in scelti) and _ha_movimenti(r)
+
+    conti = [r for r in saldi if r["tipo"] == tipo]
+    ids = {r["id"] for r in conti}
+    figli = {}
+    for r in conti:
+        if r["padre_id"] in ids and diretti(r):
+            figli.setdefault(r["padre_id"], []).append(r)
+
+    righe = []
+    totale = 0
+    for r in conti:
+        if r["padre_id"] in ids:
+            continue  # sottoconto: compare sotto il suo conto padre
+        sotto = figli.get(r["id"], [])
+        if sotto:
+            proprio = importo(r) if diretti(r) else 0
+            gruppo = proprio + sum(importo(f) for f in sotto)
+            righe.append(Riga([r["codice"], r["nome"], gruppo], grassetto=True))
+            if diretti(r):
+                righe.append(Riga([r["codice"], "registrato direttamente sul conto", importo(r)], rientro=1))
+            for f in sotto:
+                righe.append(Riga([f["codice"], f["nome"], importo(f)], rientro=1))
+            totale += gruppo
+        elif diretti(r):
+            # Qui arrivano i conti principali e i sottoconti di un padre di altro tipo:
+            # senza rientro, perché il padre non è in questa sezione
+            righe.append(Riga([r["codice"], r["nome"], importo(r)]))
+            totale += importo(r)
+    return righe, totale
+
+
+def report_costi_ricavi(db, esercizio_id, conto_ids=None):
+    saldi = db.get_saldi(esercizio_id)
+    scelti = None if conto_ids is None else set(conto_ids)
+    righe_costi, tot_costi = _righe_economiche(saldi, "COSTO", scelti)
+    righe_ricavi, tot_ricavi = _righe_economiche(saldi, "RICAVO", scelti)
+    nessun_costo = Riga(["", "Nessun costo registrato", None])
+    nessun_ricavo = Riga(["", "Nessun ricavo registrato", None])
+
+    risultato = tot_ricavi - tot_costi
+    if round(risultato, 2) >= 0:
+        voce_risultato = "UTILE (ricavi - costi)"
+    else:
+        voce_risultato = "PERDITA (costi - ricavi)"
+
+    return Report(
+        titolo="Costi e Ricavi",
+        sottotitolo=_sottotitolo(db, esercizio_id),
+        colonne=[
+            Colonna("Codice", "centro", 10),
+            Colonna("Conto", "testo", 44),
+            Colonna("Importo", "importo", 16),
+        ],
+        sezioni=[
+            Sezione(
+                (righe_costi or [nessun_costo]) + [Riga(["", "TOTALE COSTI", tot_costi], grassetto=True)],
+                titolo="Costi",
+            ),
+            Sezione(
+                (righe_ricavi or [nessun_ricavo]) + [Riga(["", "TOTALE RICAVI", tot_ricavi], grassetto=True)],
+                titolo="Ricavi",
+            ),
+            Sezione(
+                [
+                    Riga(["", "Totale ricavi", tot_ricavi]),
+                    Riga(["", "Totale costi", tot_costi]),
+                    Riga(["", voce_risultato, abs(risultato)], grassetto=True),
+                ],
+                titolo="Risultato" if conto_ids is None else "Risultato dei conti selezionati",
+                intestazioni=False,
+            ),
+        ],
+        note="Solo i conti di tipo COSTO e RICAVO con movimenti nell'esercizio. "
+             "Un conto con sottoconti riporta in grassetto il totale del gruppo.",
+        nome_foglio="Costi e Ricavi",
+        vuoto=not righe_costi and not righe_ricavi,
+        filtro=_descrivi_selezione(db, conto_ids),
+    )
+
+
+def conti_economici(db):
+    """Conti di costo e ricavo in ordine gerarchico (per scegliere cosa esportare)."""
+    return [c for c in db.get_conti() if c["tipo"] in TIPI_ECONOMICI]
+
+
+def report_partitari(db, esercizio_id, conto_ids=None):
+    """
+    Partitari: per ogni conto i movimenti dell'esercizio con data, numero,
+    causale e contropartita, e il saldo progressivo nel verso naturale del conto.
+    conto_ids: conti da includere (None = tutti i conti).
+    Compaiono solo i conti che nell'esercizio hanno movimenti.
+    """
+    conti = list(db.get_conti())
+    if conto_ids is not None:
+        scelti = set(conto_ids)
+        conti = [c for c in conti if c["id"] in scelti]
+    movimenti = {c["id"]: [] for c in conti}
+
+    # Ogni registrazione ha un conto in Dare e uno in Avere: finisce nel partitario
+    # di ciascuno dei due, con l'altro come contropartita.
+    for reg in db.get_registrazioni_compatte(esercizio_id):
+        if reg["dare_conto_id"] in movimenti:
+            movimenti[reg["dare_conto_id"]].append(
+                (reg, _conto(reg["avere_codice"], reg["avere_nome"]), reg["importo"], 0)
+            )
+        if reg["avere_conto_id"] in movimenti:
+            movimenti[reg["avere_conto_id"]].append(
+                (reg, _conto(reg["dare_codice"], reg["dare_nome"]), 0, reg["importo"])
+            )
+
+    sezioni = []
+    piatte = []
+    for c in conti:
+        voci = movimenti[c["id"]]
+        if not voci:
+            continue
+        segno = SEGNO_SALDO[c["tipo"]]
+        righe = []
+        saldo = tot_dare = tot_avere = 0
+        for reg, contropartita, dare, avere in voci:
+            tot_dare += dare
+            tot_avere += avere
+            saldo += segno * (dare - avere)
+            valori = [
+                _format_date(reg["data"]), reg["numero"], reg["descrizione"],
+                contropartita, dare or None, avere or None, saldo,
+            ]
+            righe.append(Riga(valori))
+            piatte.append([c["codice"], c["nome"]] + valori)
+        righe.append(Riga(["", "", "TOTALE", "", tot_dare, tot_avere, saldo], grassetto=True))
+        sezioni.append(Sezione(righe, titolo=f"{_conto(c['codice'], c['nome'])}  ({NATURA[c['tipo']]})"))
+
+    colonne = [
+        Colonna("Data", "centro", 11),
+        Colonna("N.", "centro", 6),
+        Colonna("Causale", "testo", 32),
+        Colonna("Contropartita", "testo", 26),
+        Colonna("Dare", "importo", 13),
+        Colonna("Avere", "importo", 13),
+        Colonna("Saldo", "importo", 13),
+    ]
+    return Report(
+        titolo="Partitari",
+        sottotitolo=_sottotitolo(db, esercizio_id),
+        colonne=colonne,
+        sezioni=sezioni,
+        colonna_nome=None,
+        note="Saldo progressivo: Dare - Avere per i conti di attivo e di costo, "
+             "Avere - Dare per i conti di passivo e di ricavo.",
+        csv_piatto=(["Codice conto", "Conto"] + [col.titolo for col in colonne], piatte),
+        nome_foglio="Partitari",
+        vuoto=not sezioni,
+        filtro=_descrivi_selezione(db, conto_ids),
+    )
+
+
+REPORT = {
+    "giornale": report_giornale,
+    "saldi": report_saldi,
+    "costi_ricavi": report_costi_ricavi,
+    "partitari": report_partitari,
+}
+
+
+def crea_report(db, esercizio_id, tipo, **opzioni):
+    return REPORT[tipo](db, esercizio_id, **opzioni)
+
+
+def salva_report(report, filepath, formato="csv"):
+    if formato == "xlsx":
+        _salva_xlsx(report, filepath)
+    elif formato == "pdf":
+        _salva_pdf(report, filepath)
+    else:
+        _salva_csv(report, filepath)
+
+
+# Compatibilità con le chiamate precedenti
+
+def export_giornale(db, esercizio_id, filepath, formato="csv"):
+    salva_report(report_giornale(db, esercizio_id), filepath, formato)
+
+
+def export_saldi(db, esercizio_id, filepath, formato="csv"):
+    salva_report(report_saldi(db, esercizio_id), filepath, formato)
+
+
+# --- Formattazione ---
+
+def _arrotonda(valore):
+    """Due decimali, senza lo zero negativo dei calcoli in virgola mobile (-0,00)."""
+    return round(valore, 2) + 0.0
+
+
+def _importo_csv(valore):
+    return "" if valore is None else f"{_arrotonda(valore):.2f}".replace(".", ",")
+
+
+def _importo_it(valore):
+    """1234.5 → 1.234,50 (None → vuoto)."""
+    if valore is None:
+        return ""
+    s = f"{_arrotonda(valore):,.2f}"
+    return s.replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def _valori_testo(report, riga, rientro="  "):
+    """Valori della riga con il rientro dei sottoconti applicato alla colonna del nome."""
+    valori = list(riga.valori)
+    if riga.rientro and report.colonna_nome is not None:
+        valori[report.colonna_nome] = rientro * riga.rientro + str(valori[report.colonna_nome])
+    return valori
+
+
+# --- CSV ---
+
+def _salva_csv(report, filepath):
+    with open(filepath, "w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.writer(f, delimiter=";")
+        if report.csv_piatto:
+            intestazioni, righe = report.csv_piatto
+            tipi = ["testo", "testo"] + [c.tipo for c in report.colonne]
+            writer.writerow(intestazioni)
+            for valori in righe:
+                writer.writerow([
+                    _importo_csv(v) if t == "importo" else ("" if v is None else v)
+                    for v, t in zip(valori, tipi)
+                ])
+            return
+
+        writer.writerow([c.titolo for c in report.colonne])
+        for i, sezione in enumerate(report.sezioni):
+            if sezione.titolo:
+                if i:
+                    writer.writerow([])
+                writer.writerow([sezione.titolo.upper()])
+            for riga in sezione.righe:
+                writer.writerow([
+                    _importo_csv(v) if c.tipo == "importo" else ("" if v is None else v)
+                    for v, c in zip(_valori_testo(report, riga), report.colonne)
+                ])
+
+
+# --- Excel ---
+
+def _salva_xlsx(report, filepath):
+    from openpyxl import Workbook
+    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+    from openpyxl.utils import get_column_letter
+
+    formato_importo = "#,##0.00"  # Excel lo mostra con le impostazioni locali (1.234,56)
+    grassetto = Font(bold=True)
+    grigio = PatternFill("solid", fgColor="E8E8E8")
+    linea = Side(style="thin", color="808080")
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = report.nome_foglio[:31]
+
+    ws.cell(row=1, column=1, value=report.titolo).font = Font(bold=True, size=14)
+    ws.cell(row=2, column=1, value=report.sottotitolo)
+    r = 4
+    if report.filtro:
+        ws.cell(row=3, column=1, value=report.filtro).font = Font(italic=True)
+        r = 5
+    riga_intestazioni = r
+
+    for i, sezione in enumerate(report.sezioni):
+        if sezione.titolo:
+            if i:
+                r += 1
+            ws.cell(row=r, column=1, value=sezione.titolo).font = Font(bold=True, size=12)
+            r += 1
+        if sezione.intestazioni:
+            for col, c in enumerate(report.colonne, 1):
+                cell = ws.cell(row=r, column=col, value=c.titolo)
+                cell.font = grassetto
+                cell.fill = grigio
+                cell.border = Border(bottom=linea)
+                if c.tipo == "importo":
+                    cell.alignment = Alignment(horizontal="right")
+                elif c.tipo == "centro":
+                    cell.alignment = Alignment(horizontal="center")
+            if len(report.sezioni) == 1:
+                ws.freeze_panes = ws.cell(row=r + 1, column=1)
+            r += 1
+        for riga in sezione.righe:
+            for col, (v, c) in enumerate(zip(riga.valori, report.colonne), 1):
+                if v is None or v == "":
+                    cell = ws.cell(row=r, column=col)
+                else:
+                    cell = ws.cell(row=r, column=col, value=_arrotonda(v) if c.tipo == "importo" else v)
+                if c.tipo == "importo":
+                    cell.number_format = formato_importo
+                elif c.tipo == "centro":
+                    cell.alignment = Alignment(horizontal="center")
+                if col - 1 == report.colonna_nome and riga.rientro:
+                    cell.alignment = Alignment(indent=2 * riga.rientro)
+                if riga.grassetto:
+                    cell.font = grassetto
+                    cell.border = Border(top=linea)
+            r += 1
+
+    if report.note:
+        ws.cell(row=r + 1, column=1, value=report.note).font = Font(italic=True, color="555555")
+
+    for col, c in enumerate(report.colonne, 1):
+        ws.column_dimensions[get_column_letter(col)].width = c.larghezza
+
+    # Stampa: una pagina di larghezza, intestazioni ripetute se la tabella è unica
+    ws.page_setup.orientation = "landscape" if report.orizzontale else "portrait"
+    ws.page_setup.paperSize = ws.PAPERSIZE_A4
+    ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 0
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+    if len(report.sezioni) == 1 and report.sezioni[0].intestazioni:
+        ws.print_title_rows = f"{riga_intestazioni}:{riga_intestazioni}"
+
+    wb.save(filepath)
+
+
+# --- PDF ---
+
+def _salva_pdf(report, filepath):
+    from xml.sax.saxutils import escape
+
+    from reportlab.lib import colors
+    from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.units import mm
+    from reportlab.pdfgen import canvas
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+    pagina = landscape(A4) if report.orizzontale else A4
+    margine = 15 * mm
+    larghezza_utile = pagina[0] - 2 * margine
+    stampato = date.today().strftime("%d/%m/%Y")
+
+    base = ParagraphStyle("base", fontName="Helvetica", fontSize=8.5, leading=10.5)
+    stili = {
+        "testo": base,
+        "centro": ParagraphStyle("centro", parent=base, alignment=TA_CENTER),
+        "importo": ParagraphStyle("importo", parent=base, alignment=TA_RIGHT),
+    }
+    stili_bold = {k: ParagraphStyle(k + "_b", parent=s, fontName="Helvetica-Bold") for k, s in stili.items()}
+    titolo_stile = ParagraphStyle("titolo", fontName="Helvetica-Bold", fontSize=15, leading=19)
+    sotto_stile = ParagraphStyle("sotto", fontName="Helvetica", fontSize=10, leading=13,
+                                 textColor=colors.HexColor("#444444"), spaceAfter=8)
+    sezione_stile = ParagraphStyle("sezione", fontName="Helvetica-Bold", fontSize=11, leading=14,
+                                   spaceBefore=10, spaceAfter=4, keepWithNext=True)
+    filtro_stile = ParagraphStyle("filtro", fontName="Helvetica-Oblique", fontSize=9, leading=12,
+                                  textColor=colors.HexColor("#444444"), spaceAfter=8)
+    nota_stile = ParagraphStyle("nota", fontName="Helvetica-Oblique", fontSize=8, leading=10,
+                                textColor=colors.HexColor("#555555"), spaceBefore=10)
+
+    totale_larghezze = sum(c.larghezza for c in report.colonne)
+    larghezze = [larghezza_utile * c.larghezza / totale_larghezze for c in report.colonne]
+
+    def cella(valore, colonna, bold, rientro=0):
+        if colonna.tipo == "importo":
+            testo = _importo_it(valore)
+        else:
+            testo = escape("" if valore is None else str(valore))
+        if rientro:
+            testo = "&nbsp;" * 4 * rientro + testo
+        return Paragraph(testo, (stili_bold if bold else stili)[colonna.tipo])
+
+    def tabella(sezione):
+        dati = []
+        stile = [
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("TOPPADDING", (0, 0), (-1, -1), 2),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+            ("LEFTPADDING", (0, 0), (-1, -1), 3),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+        ]
+        if sezione.intestazioni:
+            dati.append([
+                Paragraph(escape(c.titolo), stili_bold[c.tipo]) for c in report.colonne
+            ])
+            stile += [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#E8E8E8")),
+                ("LINEBELOW", (0, 0), (-1, 0), 0.6, colors.HexColor("#808080")),
+            ]
+        for riga in sezione.righe:
+            n = len(dati)
+            dati.append([
+                cella(v, c, riga.grassetto, riga.rientro if i == report.colonna_nome else 0)
+                for i, (v, c) in enumerate(zip(riga.valori, report.colonne))
+            ])
+            if riga.grassetto:
+                stile.append(("LINEABOVE", (0, n), (-1, n), 0.6, colors.HexColor("#808080")))
+            elif n % 2 == 0:
+                stile.append(("BACKGROUND", (0, n), (-1, n), colors.HexColor("#F6F6F6")))
+        t = Table(dati, colWidths=larghezze, repeatRows=1 if sezione.intestazioni else 0)
+        t.setStyle(TableStyle(stile))
+        return t
+
+    contenuto = [Paragraph(escape(report.titolo), titolo_stile)]
+    if report.filtro:
+        contenuto += [
+            Paragraph(escape(report.sottotitolo), ParagraphStyle("sotto_f", parent=sotto_stile, spaceAfter=2)),
+            Paragraph(escape(report.filtro), filtro_stile),
+        ]
+    else:
+        contenuto.append(Paragraph(escape(report.sottotitolo), sotto_stile))
+    if report.vuoto:
+        contenuto.append(Paragraph("Nessun dato da esportare.", base))
+    for sezione in report.sezioni:
+        if sezione.titolo:
+            contenuto.append(Paragraph(escape(sezione.titolo), sezione_stile))
+        contenuto.append(tabella(sezione))
+        contenuto.append(Spacer(1, 4))
+    if report.note:
+        contenuto.append(Paragraph(escape(report.note), nota_stile))
+
+    piede_sinistra = f"Contabilino - {report.titolo} - {report.sottotitolo}"
+
+    class CanvasNumerato(canvas.Canvas):
+        """Scrive il piè di pagina alla fine, quando si conosce il numero totale di pagine."""
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self._pagine = []
+
+        def showPage(self):
+            self._pagine.append(dict(self.__dict__))
+            self._startPage()
+
+        def save(self):
+            totale = len(self._pagine)
+            for stato in self._pagine:
+                self.__dict__.update(stato)
+                self.setFont("Helvetica", 7.5)
+                self.setFillColor(colors.HexColor("#666666"))
+                self.drawString(margine, 9 * mm, piede_sinistra)
+                self.drawRightString(
+                    pagina[0] - margine, 9 * mm,
+                    f"Stampato il {stampato}  -  Pagina {self._pageNumber} di {totale}",
+                )
+                super().showPage()
+            super().save()
+
+    doc = SimpleDocTemplate(
+        filepath, pagesize=pagina,
+        leftMargin=margine, rightMargin=margine, topMargin=margine, bottomMargin=18 * mm,
+        title=f"{report.titolo} - {report.sottotitolo}", author="Contabilino",
+    )
+    doc.build(contenuto, canvasmaker=CanvasNumerato)

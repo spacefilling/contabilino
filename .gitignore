@@ -1,0 +1,23 @@
+# Dati contabili: NON vanno nel repository (ogni utente parte con un db proprio)
+*.db
+# ...tranne il database di prova con dati inventati
+!esempi/*.db
+
+# Impostazioni locali dell'editor
+*.code-workspace
+
+# Artefatti di build PyInstaller
+build/
+dist/
+*.spec
+
+# Cache Python
+__pycache__/
+*.pyc
+
+# File di sistema
+.DS_Store
+
+# Sito di documentazione (Jekyll in locale)
+docs/_site/
+docs/.jekyll-cache/
