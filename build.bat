@@ -3,13 +3,13 @@ echo === Contabilino - Build ===
 echo.
 
 REM Installa dipendenze
-pip install openpyxl reportlab pyinstaller
+pip install -r requirements.txt
 
 echo.
 echo Compilazione in corso...
 echo.
 
-pyinstaller --onefile --windowed --name Contabilino --hidden-import openpyxl main.py
+pyinstaller --onefile --windowed --name Contabilino --icon risorse\contabilino.ico --hidden-import openpyxl --collect-data sv_ttk main.py
 
 echo.
 echo === Build completata ===

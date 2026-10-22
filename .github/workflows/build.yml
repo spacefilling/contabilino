@@ -28,7 +28,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Compila l'eseguibile
-        run: pyinstaller --onefile --windowed --name Contabilino --hidden-import openpyxl main.py
+        run: pyinstaller --onefile --windowed --name Contabilino --icon risorse/contabilino.ico --hidden-import openpyxl --collect-data sv_ttk main.py
 
       # L'exe è sempre scaricabile dalla pagina del run (tab Actions > artifacts),
       # anche per un semplice "Run workflow" senza pubblicare una versione.

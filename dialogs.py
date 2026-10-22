@@ -15,6 +15,7 @@ from dateutils import (
     format_display,
     periodo_label,
 )
+from tema import px
 from widgets import SmartDateEntry, format_importo
 
 
@@ -27,7 +28,6 @@ class GestioneEserciziDialog(tk.Toplevel):
         self.selected_id = current_esercizio_id
 
         self.title("Gestione Esercizi")
-        self.geometry("740x360")
         self.resizable(True, False)
         self.transient(parent)
         self.grab_set()
@@ -41,7 +41,7 @@ class GestioneEserciziDialog(tk.Toplevel):
         self.geometry(f"+{x}+{y}")
 
     def _build_ui(self):
-        frame = ttk.Frame(self, padding=10)
+        frame = ttk.Frame(self, padding=px(10))
         frame.pack(fill=tk.BOTH, expand=True)
 
         cols = ("descrizione", "inizio", "fine", "stato")
@@ -50,10 +50,10 @@ class GestioneEserciziDialog(tk.Toplevel):
         self.tree.heading("inizio", text="Inizio")
         self.tree.heading("fine", text="Fine")
         self.tree.heading("stato", text="Stato")
-        self.tree.column("descrizione", width=250)
-        self.tree.column("inizio", width=100, anchor=tk.CENTER, stretch=False)
-        self.tree.column("fine", width=100, anchor=tk.CENTER, stretch=False)
-        self.tree.column("stato", width=80, anchor=tk.CENTER, stretch=False)
+        self.tree.column("descrizione", width=px(250))
+        self.tree.column("inizio", width=px(100), anchor=tk.CENTER, stretch=False)
+        self.tree.column("fine", width=px(100), anchor=tk.CENTER, stretch=False)
+        self.tree.column("stato", width=px(80), anchor=tk.CENTER, stretch=False)
         self.tree.pack(fill=tk.BOTH, expand=True)
         self.tree.bind("<Double-Button-1>", lambda e: self._on_seleziona())
 
@@ -243,7 +243,6 @@ class EsercizioDialog(tk.Toplevel):
         self._esercizio = esercizio
 
         self.title("Modifica Esercizio" if esercizio else "Nuovo Esercizio")
-        self.geometry("430x270")
         self.resizable(False, False)
         self.transient(parent)
         self.grab_set()
@@ -256,7 +255,7 @@ class EsercizioDialog(tk.Toplevel):
         self.geometry(f"+{x}+{y}")
 
     def _build_ui(self):
-        frame = ttk.Frame(self, padding=15)
+        frame = ttk.Frame(self, padding=px(15))
         frame.pack(fill=tk.BOTH, expand=True)
 
         ttk.Label(frame, text="Data inizio:").grid(row=0, column=0, sticky=tk.W, pady=5)
@@ -270,7 +269,7 @@ class EsercizioDialog(tk.Toplevel):
         ttk.Label(
             frame,
             text="Il periodo può essere a cavallo tra due anni\n(es. 01/07/2026 - 30/06/2027).",
-            foreground="#555555",
+            style="Nota.TLabel",
         ).grid(row=2, column=0, columnspan=2, sticky=tk.W, pady=(0, 5))
 
         ttk.Label(frame, text="Descrizione:").grid(row=3, column=0, sticky=tk.W, pady=5)
@@ -289,7 +288,7 @@ class EsercizioDialog(tk.Toplevel):
 
         btn_frame = ttk.Frame(frame)
         btn_frame.grid(row=5, column=0, columnspan=2, pady=15)
-        ttk.Button(btn_frame, text="Salva", command=self._on_salva).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Salva", style="Accent.TButton", command=self._on_salva).pack(side=tk.LEFT, padx=5)
         ttk.Button(btn_frame, text="Annulla", command=self.destroy).pack(side=tk.LEFT, padx=5)
 
         # Valori iniziali
@@ -376,7 +375,6 @@ class GestioneContiDialog(tk.Toplevel):
         self.db = db
 
         self.title("Gestione Piano dei Conti")
-        self.geometry("550x450")
         self.resizable(True, True)
         self.transient(parent)
         self.grab_set()
@@ -390,7 +388,7 @@ class GestioneContiDialog(tk.Toplevel):
         self.geometry(f"+{x}+{y}")
 
     def _build_ui(self):
-        frame = ttk.Frame(self, padding=10)
+        frame = ttk.Frame(self, padding=px(10))
         frame.pack(fill=tk.BOTH, expand=True)
 
         # Treeview ad albero: mostra gerarchia conti/sottoconti
@@ -400,17 +398,17 @@ class GestioneContiDialog(tk.Toplevel):
         self.tree.heading("codice", text="Codice")
         self.tree.heading("nome", text="Nome")
         self.tree.heading("tipo", text="Tipo")
-        self.tree.column("#0", width=30, stretch=False)
-        self.tree.column("codice", width=70, anchor=tk.CENTER)
-        self.tree.column("nome", width=270)
-        self.tree.column("tipo", width=100, anchor=tk.CENTER)
+        self.tree.column("#0", width=px(30), stretch=False)
+        self.tree.column("codice", width=px(70), anchor=tk.CENTER)
+        self.tree.column("nome", width=px(270))
+        self.tree.column("tipo", width=px(100), anchor=tk.CENTER)
 
         scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=self.tree.yview)
         self.tree.configure(yscrollcommand=scrollbar.set)
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        btn_frame = ttk.Frame(self, padding=10)
+        btn_frame = ttk.Frame(self, padding=px(10))
         btn_frame.pack(fill=tk.X)
         ttk.Button(btn_frame, text="Nuovo conto", command=self._on_nuovo).pack(side=tk.LEFT, padx=3)
         ttk.Button(btn_frame, text="Nuovo sottoconto", command=self._on_nuovo_sotto).pack(side=tk.LEFT, padx=3)
@@ -528,7 +526,6 @@ class EditContoDialog(tk.Toplevel):
         self._tipo_originale = conto["tipo"] if conto else None
 
         self.title("Modifica Conto" if conto else "Nuovo Conto")
-        self.geometry("400x260")
         self.resizable(False, False)
         self.transient(parent)
         self.grab_set()
@@ -541,7 +538,7 @@ class EditContoDialog(tk.Toplevel):
         self.geometry(f"+{x}+{y}")
 
     def _build_ui(self, conto, padre_id_default):
-        frame = ttk.Frame(self, padding=15)
+        frame = ttk.Frame(self, padding=px(15))
         frame.pack(fill=tk.BOTH, expand=True)
 
         # Conto padre (dropdown)
@@ -611,7 +608,7 @@ class EditContoDialog(tk.Toplevel):
 
         btn_frame = ttk.Frame(frame)
         btn_frame.grid(row=4, column=0, columnspan=2, pady=15)
-        ttk.Button(btn_frame, text="Salva", command=self._on_save).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Salva", style="Accent.TButton", command=self._on_save).pack(side=tk.LEFT, padx=5)
         ttk.Button(btn_frame, text="Annulla", command=self.destroy).pack(side=tk.LEFT, padx=5)
 
     def _on_padre_changed(self, event=None):
@@ -709,10 +706,10 @@ class EliminaRegistrazioneDialog(tk.Toplevel):
 
     def _build_ui(self):
         reg = self._reg
-        frame = ttk.Frame(self, padding=15)
+        frame = ttk.Frame(self, padding=px(15))
         frame.pack(fill=tk.BOTH, expand=True)
 
-        ttk.Label(frame, text="Eliminare questa registrazione?", font=("", 10, "bold")).pack(anchor=tk.W)
+        ttk.Label(frame, text="Eliminare questa registrazione?", style="Sottotitolo.TLabel").pack(anchor=tk.W)
 
         dati = ttk.Frame(frame)
         dati.pack(fill=tk.X, pady=(8, 12))
@@ -724,7 +721,7 @@ class EliminaRegistrazioneDialog(tk.Toplevel):
             ("Importo", format_importo(reg["importo"])),
         ])
 
-        numerazione = ttk.LabelFrame(frame, text="Numerazione", padding=8)
+        numerazione = ttk.LabelFrame(frame, text="Numerazione", padding=px(8))
         numerazione.pack(fill=tk.X)
         if self._successive:
             if self._successive == 1:
@@ -750,7 +747,7 @@ class EliminaRegistrazioneDialog(tk.Toplevel):
             frame,
             text="In alternativa puoi stornarla: la registrazione resta nel giornale\n"
                  "e se ne aggiunge una con i conti invertiti che la annulla.",
-            foreground="#555555",
+            style="Nota.TLabel",
         ).pack(anchor=tk.W, pady=(10, 0))
 
         btn_frame = ttk.Frame(frame)
@@ -807,10 +804,10 @@ class StornoDialog(tk.Toplevel):
         avere = f"{reg['avere_codice']} - {reg['avere_nome']}"
         importo = format_importo(reg["importo"])
 
-        frame = ttk.Frame(self, padding=15)
+        frame = ttk.Frame(self, padding=px(15))
         frame.pack(fill=tk.BOTH, expand=True)
 
-        originale = ttk.LabelFrame(frame, text="Registrazione da stornare", padding=8)
+        originale = ttk.LabelFrame(frame, text="Registrazione da stornare", padding=px(8))
         originale.pack(fill=tk.X)
         _righe_dati(originale, [
             ("N.", f"{reg['numero']} del {format_display(reg['data'])}"),
@@ -820,13 +817,13 @@ class StornoDialog(tk.Toplevel):
             ("Importo", importo),
         ])
 
-        storno = ttk.LabelFrame(frame, text="Storno (stessi conti, Dare e Avere invertiti)", padding=8)
+        storno = ttk.LabelFrame(frame, text="Storno (stessi conti, Dare e Avere invertiti)", padding=px(8))
         storno.pack(fill=tk.X, pady=(10, 0))
 
         ttk.Label(storno, text="Data:").grid(row=0, column=0, sticky=tk.W, padx=(0, 10), pady=2)
         self.data_entry = SmartDateEntry(storno, width=14, on_change=self._aggiorna_esercizio)
         self.data_entry.grid(row=0, column=1, sticky=tk.W, pady=2)
-        self.esercizio_label = ttk.Label(storno, foreground="#555555")
+        self.esercizio_label = ttk.Label(storno, style="Nota.TLabel")
         self.esercizio_label.grid(row=1, column=1, sticky=tk.W)
 
         ttk.Label(storno, text="Causale:").grid(row=2, column=0, sticky=tk.W, padx=(0, 10), pady=2)
@@ -841,7 +838,7 @@ class StornoDialog(tk.Toplevel):
 
         btn_frame = ttk.Frame(frame)
         btn_frame.pack(pady=(15, 0))
-        ttk.Button(btn_frame, text="Registra storno", command=self._on_registra).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Registra storno", style="Accent.TButton", command=self._on_registra).pack(side=tk.LEFT, padx=5)
         ttk.Button(btn_frame, text="Annulla", command=self.destroy).pack(side=tk.LEFT, padx=5)
 
         self.data_entry.set_iso_date(self._data_proposta())
@@ -950,10 +947,10 @@ class SelezioneContiDialog(tk.Toplevel):
         self.geometry(f"+{x}+{y}")
 
     def _build_ui(self, titolo):
-        frame = ttk.Frame(self, padding=15)
+        frame = ttk.Frame(self, padding=px(15))
         frame.pack(fill=tk.BOTH, expand=True)
 
-        ttk.Label(frame, text=f"{titolo}: quali conti?", font=("", 10, "bold")).pack(anchor=tk.W)
+        ttk.Label(frame, text=f"{titolo}: quali conti?", style="Sottotitolo.TLabel").pack(anchor=tk.W)
         if self._solo_economici:
             ttk.Radiobutton(
                 frame, variable=self._modo_var, value="economici", text="Solo i conti di costo e ricavo",
@@ -989,7 +986,7 @@ class SelezioneContiDialog(tk.Toplevel):
         cerca_entry = ttk.Entry(ricerca, textvariable=self._cerca_var, width=28)
         cerca_entry.pack(side=tk.LEFT, padx=4)
         cerca_entry.bind("<Return>", lambda e: "break")
-        ttk.Label(ricerca, text="(codice o nome)", foreground="#555555").pack(side=tk.LEFT)
+        ttk.Label(ricerca, text="(codice o nome)", style="Nota.TLabel").pack(side=tk.LEFT)
 
         # Elenco con le spunte
         lista = ttk.Frame(frame)
@@ -1000,10 +997,10 @@ class SelezioneContiDialog(tk.Toplevel):
         self.tree.heading("codice", text="Codice")
         self.tree.heading("nome", text="Conto")
         self.tree.heading("tipo", text="Tipo")
-        self.tree.column("spunta", width=30, anchor=tk.CENTER, stretch=False)
-        self.tree.column("codice", width=70, anchor=tk.CENTER, stretch=False)
-        self.tree.column("nome", width=260)
-        self.tree.column("tipo", width=80, anchor=tk.CENTER, stretch=False)
+        self.tree.column("spunta", width=px(30), anchor=tk.CENTER, stretch=False)
+        self.tree.column("codice", width=px(70), anchor=tk.CENTER, stretch=False)
+        self.tree.column("nome", width=px(260))
+        self.tree.column("tipo", width=px(80), anchor=tk.CENTER, stretch=False)
         scrollbar = ttk.Scrollbar(lista, orient=tk.VERTICAL, command=self.tree.yview)
         self.tree.configure(yscrollcommand=scrollbar.set)
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -1016,19 +1013,19 @@ class SelezioneContiDialog(tk.Toplevel):
         comandi.pack(fill=tk.X, pady=(4, 0))
         ttk.Button(comandi, text="Spunta tutti quelli in elenco", command=self._spunta_visibili).pack(side=tk.LEFT)
         ttk.Button(comandi, text="Togli tutte le spunte", command=self._togli_tutti).pack(side=tk.LEFT, padx=4)
-        self._conteggio = ttk.Label(comandi, foreground="#555555")
+        self._conteggio = ttk.Label(comandi, style="Nota.TLabel")
         self._conteggio.pack(side=tk.RIGHT)
 
         ttk.Label(
             frame,
             text="Clic su un conto (o barra spaziatrice) per spuntarlo o togliere la spunta.\n"
                  "Spuntando un conto padre si spuntano anche i suoi sottoconti.",
-            foreground="#555555",
+            style="Nota.TLabel",
         ).pack(anchor=tk.W, pady=(8, 0))
 
         btn_frame = ttk.Frame(frame)
         btn_frame.pack(pady=(12, 0))
-        btn_ok = ttk.Button(btn_frame, text="Esporta...", command=self._on_ok)
+        btn_ok = ttk.Button(btn_frame, text="Esporta...", style="Accent.TButton", command=self._on_ok)
         btn_ok.pack(side=tk.LEFT, padx=5)
         btn_ok.bind("<Return>", lambda e: self._on_ok())
         ttk.Button(btn_frame, text="Annulla", command=self.destroy).pack(side=tk.LEFT, padx=5)
@@ -1163,10 +1160,10 @@ class RiportoSaldiDialog(tk.Toplevel):
 
     def _build_ui(self):
         prec, es = self._precedente, self._esercizio
-        frame = ttk.Frame(self, padding=15)
+        frame = ttk.Frame(self, padding=px(15))
         frame.pack(fill=tk.BOTH, expand=True)
 
-        ttk.Label(frame, text="Riporto dei saldi di attivo e passivo", font=("", 10, "bold")).pack(anchor=tk.W)
+        ttk.Label(frame, text="Riporto dei saldi di attivo e passivo", style="Sottotitolo.TLabel").pack(anchor=tk.W)
         ttk.Label(
             frame,
             text=f"Dall'esercizio: {prec['descrizione']} ({periodo_label(prec['data_inizio'], prec['data_fine'])})"
@@ -1175,7 +1172,7 @@ class RiportoSaldiDialog(tk.Toplevel):
         ).pack(anchor=tk.W, pady=(6, 8))
 
         # Conto di patrimonio netto (contropartita)
-        contro = ttk.LabelFrame(frame, text="Contropartita: conto di patrimonio netto", padding=8)
+        contro = ttk.LabelFrame(frame, text="Contropartita: conto di patrimonio netto", padding=px(8))
         contro.pack(fill=tk.X)
         self._labels = {f"{c['codice']} - {c['nome']}": c["id"] for c in self._conti_patrimonio()}
         valori = list(self._labels) + [self._NUOVO]
@@ -1196,7 +1193,7 @@ class RiportoSaldiDialog(tk.Toplevel):
         ttk.Label(self._nuovo_frame, text="Nome").pack(side=tk.LEFT)
         self._nome_var = tk.StringVar(value="Patrimonio netto")
         ttk.Entry(self._nuovo_frame, textvariable=self._nome_var, width=24).pack(side=tk.LEFT, padx=4)
-        ttk.Label(self._nuovo_frame, text="(tipo PASSIVO)", foreground="#555555").pack(side=tk.LEFT)
+        ttk.Label(self._nuovo_frame, text="(tipo PASSIVO)", style="Nota.TLabel").pack(side=tk.LEFT)
 
         # Anteprima
         lista = ttk.Frame(frame)
@@ -1211,7 +1208,7 @@ class RiportoSaldiDialog(tk.Toplevel):
         self.tree.configure(yscrollcommand=scrollbar.set)
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self._riepilogo = ttk.Label(frame, foreground="#555555", justify=tk.LEFT)
+        self._riepilogo = ttk.Label(frame, style="Nota.TLabel", justify=tk.LEFT)
         self._riepilogo.pack(anchor=tk.W, pady=(6, 0))
 
         gia_fatte = self.db.conta_aperture(es["id"])
@@ -1220,12 +1217,12 @@ class RiportoSaldiDialog(tk.Toplevel):
                 frame,
                 text=f"Attenzione: in questo esercizio ci sono già {gia_fatte} registrazioni \"Saldo di apertura\".\n"
                      "Riportando di nuovo, i saldi verrebbero contati due volte.",
-                foreground="#b00020",
+                style="Errore.TLabel",
             ).pack(anchor=tk.W, pady=(6, 0))
 
         btn_frame = ttk.Frame(frame)
         btn_frame.pack(pady=(12, 0))
-        self._btn_ok = ttk.Button(btn_frame, text="Registra apertura", command=self._on_registra)
+        self._btn_ok = ttk.Button(btn_frame, text="Registra apertura", style="Accent.TButton", command=self._on_registra)
         self._btn_ok.pack(side=tk.LEFT, padx=5)
         ttk.Button(btn_frame, text="Non ora", command=self.destroy).pack(side=tk.LEFT, padx=5)
         self._aggiorna()

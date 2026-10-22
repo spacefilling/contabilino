@@ -9,6 +9,7 @@ format_importo: importo in stile italiano (1234.56 → 1.234,56)
 import tkinter as tk
 from tkinter import ttk
 
+import tema
 from dateutils import to_iso, format_display
 
 
@@ -195,6 +196,12 @@ class AutocompleteEntry(ttk.Entry):
         self.bind("<Up>", self._on_arrow_up)
         self.bind("<FocusOut>", self._on_focus_out)
         self.bind("<FocusIn>", self._on_focus_in)
+        # Un clic in un altro punto della finestra chiude la tendina; se la finestra
+        # si sposta o cambia misura, la tendina la segue
+        finestra = self.winfo_toplevel()
+        finestra.bind("<ButtonPress>", self._on_clic_finestra, add="+")
+        finestra.bind("<Configure>", lambda e: e.widget is finestra and self._position_popup(), add="+")
+        self.bind("<Destroy>", lambda e: self._close_popup(), add="+")
 
     def set_values(self, values):
         """Aggiorna la lista dei valori disponibili."""
@@ -254,15 +261,25 @@ class AutocompleteEntry(ttk.Entry):
         self._popup = tk.Toplevel(self)
         self._popup.wm_overrideredirect(True)
         self._popup.wm_attributes("-topmost", True)
+        self._popup.configure(background=tema.BORDO)
 
         self._listbox = tk.Listbox(
             self._popup,
-            font=self.cget("font") if self.cget("font") else None,
+            font=tema.FONT_TESTO,
             selectmode=tk.SINGLE,
             activestyle="none",
             exportselection=False,
+            takefocus=False,
+            borderwidth=0,
+            highlightthickness=0,
+            relief=tk.FLAT,
+            background=tema.SFONDO_CARD,
+            foreground=tema.TESTO,
+            selectbackground=tema.SELEZIONE_LISTA,
+            selectforeground=tema.TESTO,
         )
-        self._listbox.pack(fill=tk.BOTH, expand=True)
+        # Cornice sottile di 1 px (lo sfondo del popup) e un po' d'aria intorno alle voci
+        self._listbox.pack(fill=tk.BOTH, expand=True, padx=1, pady=1, ipadx=tema.px(4), ipady=tema.px(3))
         self._listbox.bind("<Button-1>", self._on_listbox_click)
         self._listbox.bind("<Double-Button-1>", self._on_listbox_double_click)
 
@@ -271,9 +288,9 @@ class AutocompleteEntry(ttk.Entry):
             return
         self.update_idletasks()
         x = self.winfo_rootx()
-        y = self.winfo_rooty() + self.winfo_height()
-        w = max(self.winfo_width(), 200)
-        h = self._listbox.winfo_reqheight() + 4
+        y = self.winfo_rooty() + self.winfo_height() + tema.px(2)
+        w = max(self.winfo_width(), tema.px(260))
+        h = self._listbox.winfo_reqheight() + 2
         self._popup.geometry(f"{w}x{h}+{x}+{y}")
 
     def _close_popup(self, event=None):
@@ -312,11 +329,23 @@ class AutocompleteEntry(ttk.Entry):
         return  # Non fare break: Tab deve propagare
 
     def _on_focus_out(self, event):
-        # Ritardo per permettere click sulla listbox
+        # Ritardo per permettere il clic su una voce della tendina
         self.after(150, self._delayed_focus_out)
 
     def _delayed_focus_out(self):
-        if self._popup and not self.focus_get():
+        """Il focus è passato altrove (un altro campo o un altro programma): chiude la tendina."""
+        if not self._popup or self._ignore_focus_out:
+            return
+        try:
+            focus = self.focus_get()
+        except (KeyError, tk.TclError):
+            focus = None  # focus su un widget interno di Tk (es. tendina di una combobox)
+        if focus is not self:
+            self._close_popup()
+
+    def _on_clic_finestra(self, event):
+        """Clic in un punto qualsiasi della finestra fuori da questo campo: chiude la tendina."""
+        if self._popup and str(event.widget) != str(self):
             self._close_popup()
 
     def _on_arrow_down(self, event):

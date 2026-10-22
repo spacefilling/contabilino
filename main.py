@@ -8,6 +8,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import os
 import sys
+import tema
 from db import Database
 from ui import MainWindow
 
@@ -72,6 +73,7 @@ def startup_dialog():
 
 
 def main():
+    tema.abilita_dpi()  # prima di qualsiasi finestra: testo nitido con lo zoom di Windows
     db_path, is_new = startup_dialog()
 
     db = Database(db_path)
@@ -83,6 +85,7 @@ def main():
         db.create_tables()
 
     root = tk.Tk()
+    tema.applica(root)
     app = MainWindow(root, db)
 
     # Se l'apertura ha aggiornato la struttura del database, avvisa dov'è la copia

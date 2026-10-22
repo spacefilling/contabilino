@@ -1,0 +1,40 @@
+name: Screenshot su Windows
+
+# Fotografa le finestre principali su Windows, a zoom 100% e 150%, per
+# controllare l'aspetto e aggiornare le immagini della documentazione.
+# Si avvia a mano dal tab Actions, oppure con un push su un ramo "screenshot/...".
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "screenshot/**"
+
+jobs:
+  screenshot:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        zoom: ["100", "150"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installa dipendenze
+        run: pip install -r requirements.txt pillow
+
+      - name: Screenshot
+        env:
+          CONTABILINO_ZOOM: ${{ matrix.zoom }}
+        run: python strumenti/screenshot.py screenshot-${{ matrix.zoom }}
+
+      - name: Carica le immagini
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshot-zoom-${{ matrix.zoom }}
+          path: screenshot-${{ matrix.zoom }}

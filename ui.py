@@ -4,6 +4,7 @@ Editing inline nel libro giornale, Tab per navigare, ricerca conti con tastiera.
 Le registrazioni si possono correggere, eliminare o stornare.
 """
 
+import os
 import sqlite3
 import tkinter as tk
 import webbrowser
@@ -16,6 +17,8 @@ from dialogs import (
     SelezioneContiDialog,
     StornoDialog,
 )
+import tema
+from tema import px
 from widgets import SmartDateEntry, AmountEntry, AutocompleteEntry, format_importo
 from export import FORMATI, conti_economici, crea_report, salva_report
 from version import MANUALE, REPOSITORY, VERSIONE
@@ -44,8 +47,8 @@ class MainWindow:
         self.esercizio_info = ""
 
         self.root.title("Contabilino")
-        self.root.geometry("950x600")
-        self.root.minsize(800, 500)
+        self.root.geometry(f"{px(1040)}x{px(680)}")
+        self.root.minsize(px(860), px(560))
 
         self._conti_map = {}  # "codice - nome" → id
         self._conti_labels = []
@@ -56,8 +59,8 @@ class MainWindow:
 
         self._build_menu()
         self._build_info_bar()
+        self._build_status_bar()  # prima delle schede: resta visibile anche con la finestra piccola
         self._build_tabs()
-        self._build_status_bar()
 
         self._refresh_conti_cache()
         self._auto_select_esercizio()
@@ -128,29 +131,32 @@ class MainWindow:
     # --- Info bar ---
 
     def _build_info_bar(self):
-        self.info_frame = ttk.Frame(self.root, padding=5)
+        """Intestazione: logo, nome del programma ed esercizio attivo."""
+        self.info_frame = ttk.Frame(self.root, padding=(px(18), px(14), px(18), px(6)))
         self.info_frame.pack(fill=tk.X)
 
-        self.db_label = ttk.Label(self.info_frame, text=f"DB: {self.db.db_path}")
-        self.db_label.pack(side=tk.LEFT, padx=5)
+        self._logo = tema.logo(self.root, 48 if tema.SCALA >= 1.4 else 32)
+        ttk.Label(self.info_frame, image=self._logo).pack(side=tk.LEFT)
+        titoli = ttk.Frame(self.info_frame)
+        titoli.pack(side=tk.LEFT, padx=(px(10), 0))
+        ttk.Label(titoli, text="Contabilino", style="Titolo.TLabel").pack(anchor=tk.W)
+        self.esercizio_label = ttk.Label(titoli, text="Nessun esercizio selezionato", style="Secondario.TLabel")
+        self.esercizio_label.pack(anchor=tk.W)
 
-        self.esercizio_label = ttk.Label(
-            self.info_frame, text="Esercizio: --", font=("", 9, "bold")
-        )
-        self.esercizio_label.pack(side=tk.RIGHT, padx=5)
+        ttk.Button(self.info_frame, text="Esercizi...", command=self._on_gestione_esercizi).pack(side=tk.RIGHT)
 
     # --- Tabs ---
 
     def _build_tabs(self):
         self.notebook = ttk.Notebook(self.root)
-        self.notebook.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        self.notebook.pack(fill=tk.BOTH, expand=True, padx=px(18), pady=(px(6), px(10)))
 
         self.giornale_frame = ttk.Frame(self.notebook)
-        self.notebook.add(self.giornale_frame, text="  Libro Giornale  ")
+        self.notebook.add(self.giornale_frame, text="Libro Giornale")
         self._build_giornale_tab()
 
         self.saldi_frame = ttk.Frame(self.notebook)
-        self.notebook.add(self.saldi_frame, text="  Saldi Conti  ")
+        self.notebook.add(self.saldi_frame, text="Saldi Conti")
         self._build_saldi_tab()
 
         self.notebook.bind("<<NotebookTabChanged>>", self._on_tab_changed)
@@ -158,7 +164,7 @@ class MainWindow:
     def _build_giornale_tab(self):
         # Treeview - layout compatto: una riga per registrazione
         tree_frame = ttk.Frame(self.giornale_frame)
-        tree_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=(5, 0))
+        tree_frame.pack(fill=tk.BOTH, expand=True, padx=px(12), pady=(px(12), 0))
 
         cols = ("numero", "data", "causale", "dare", "avere", "importo")
         self.giornale_tree = ttk.Treeview(tree_frame, columns=cols, show="headings", selectmode="browse")
@@ -169,12 +175,12 @@ class MainWindow:
         self.giornale_tree.heading("avere", text="Conto Avere")
         self.giornale_tree.heading("importo", text="Importo")
 
-        self.giornale_tree.column("numero", width=40, anchor=tk.CENTER, stretch=False)
-        self.giornale_tree.column("data", width=85, anchor=tk.CENTER, stretch=False)
-        self.giornale_tree.column("causale", width=220)
-        self.giornale_tree.column("dare", width=180)
-        self.giornale_tree.column("avere", width=180)
-        self.giornale_tree.column("importo", width=90, anchor=tk.E, stretch=False)
+        self.giornale_tree.column("numero", width=px(50), anchor=tk.CENTER, stretch=False)
+        self.giornale_tree.column("data", width=px(100), anchor=tk.CENTER, stretch=False)
+        self.giornale_tree.column("causale", width=px(260))
+        self.giornale_tree.column("dare", width=px(200))
+        self.giornale_tree.column("avere", width=px(200))
+        self.giornale_tree.column("importo", width=px(110), anchor=tk.E, stretch=False)
 
         scrollbar = ttk.Scrollbar(tree_frame, orient=tk.VERTICAL, command=self.giornale_tree.yview)
         self.giornale_tree.configure(yscrollcommand=scrollbar.set)
@@ -201,54 +207,54 @@ class MainWindow:
         self._menu_giornale.add_command(label="Storno...", command=self._on_storno_registrazione)
 
         azioni_frame = ttk.Frame(self.giornale_frame)
-        azioni_frame.pack(fill=tk.X, padx=5, pady=(4, 0))
-        ttk.Label(azioni_frame, text="Registrazione selezionata:").pack(side=tk.LEFT, padx=(0, 5))
+        azioni_frame.pack(fill=tk.X, padx=px(12), pady=(px(8), 0))
+        ttk.Label(azioni_frame, text="Registrazione selezionata", style="Secondario.TLabel").pack(side=tk.LEFT, padx=(0, px(8)))
         self._btn_modifica = ttk.Button(azioni_frame, text="Modifica", command=self._on_modifica_registrazione)
         self._btn_elimina = ttk.Button(azioni_frame, text="Elimina...", command=self._on_elimina_registrazione)
         self._btn_storno = ttk.Button(azioni_frame, text="Storno...", command=self._on_storno_registrazione)
         for btn in (self._btn_modifica, self._btn_elimina, self._btn_storno):
-            btn.pack(side=tk.LEFT, padx=2)
+            btn.pack(side=tk.LEFT, padx=(0, px(6)))
 
         # --- Riga di input inline ---
         self._build_input_row()
 
     def _build_input_row(self):
-        input_frame = ttk.LabelFrame(self.giornale_frame, text=self._TITOLO_NUOVA, padding=8)
-        input_frame.pack(fill=tk.X, padx=5, pady=5)
+        input_frame = ttk.LabelFrame(self.giornale_frame, text=self._TITOLO_NUOVA, padding=(px(12), px(8), px(12), px(12)))
+        input_frame.pack(fill=tk.X, padx=px(12), pady=px(12))
         self._input_frame = input_frame
 
         # Griglia di input
-        ttk.Label(input_frame, text="Data").grid(row=0, column=0, padx=2)
-        ttk.Label(input_frame, text="Causale").grid(row=0, column=1, padx=2)
-        ttk.Label(input_frame, text="Conto Dare").grid(row=0, column=2, padx=2)
-        ttk.Label(input_frame, text="Conto Avere").grid(row=0, column=3, padx=2)
-        ttk.Label(input_frame, text="Importo").grid(row=0, column=4, padx=2)
+        for col, testo in enumerate(("Data", "Causale", "Conto Dare", "Conto Avere", "Importo")):
+            ttk.Label(input_frame, text=testo, style="Secondario.TLabel").grid(
+                row=0, column=col, padx=px(3), pady=(0, px(3)), sticky=tk.W
+            )
 
         self._input_data = SmartDateEntry(input_frame, width=12)
-        self._input_data.grid(row=1, column=0, padx=2, sticky=tk.W + tk.E)
+        self._input_data.grid(row=1, column=0, padx=px(3), sticky=tk.W + tk.E)
 
         self._input_causale = AutocompleteEntry(input_frame, values=[], allow_free_text=True, width=25)
-        self._input_causale.grid(row=1, column=1, padx=2, sticky=tk.W + tk.E)
+        self._input_causale.grid(row=1, column=1, padx=px(3), sticky=tk.W + tk.E)
 
         self._input_dare = AutocompleteEntry(input_frame, values=self._conti_labels, width=22)
-        self._input_dare.grid(row=1, column=2, padx=2, sticky=tk.W + tk.E)
+        self._input_dare.grid(row=1, column=2, padx=px(3), sticky=tk.W + tk.E)
 
         self._input_avere = AutocompleteEntry(input_frame, values=self._conti_labels, width=22)
-        self._input_avere.grid(row=1, column=3, padx=2, sticky=tk.W + tk.E)
+        self._input_avere.grid(row=1, column=3, padx=px(3), sticky=tk.W + tk.E)
 
         self._input_importo = AmountEntry(input_frame, width=12)
-        self._input_importo.grid(row=1, column=4, padx=2, sticky=tk.W + tk.E)
+        self._input_importo.grid(row=1, column=4, padx=px(3), sticky=tk.W + tk.E)
 
         # Enter sull'importo → salva
         self._input_importo.bind("<Return>", lambda e: self._salva_registrazione_inline())
 
         # Pulsanti
         btn_frame = ttk.Frame(input_frame)
-        btn_frame.grid(row=1, column=5, padx=(8, 2))
-        ttk.Button(btn_frame, text="Salva", width=8, command=self._salva_registrazione_inline).pack(side=tk.LEFT, padx=2)
+        btn_frame.grid(row=1, column=5, padx=(px(10), 0))
+        ttk.Button(btn_frame, text="Salva", width=8, style="Accent.TButton",
+                   command=self._salva_registrazione_inline).pack(side=tk.LEFT, padx=(0, px(6)))
         # Durante una modifica diventa "Annulla"
         self._btn_pulisci = ttk.Button(btn_frame, text="Pulisci", width=8, command=self._clear_input_row)
-        self._btn_pulisci.pack(side=tk.LEFT, padx=2)
+        self._btn_pulisci.pack(side=tk.LEFT)
 
         # Configura colonne per espansione
         input_frame.columnconfigure(1, weight=2)
@@ -391,7 +397,7 @@ class MainWindow:
 
     def _build_saldi_tab(self):
         tree_frame = ttk.Frame(self.saldi_frame)
-        tree_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        tree_frame.pack(fill=tk.BOTH, expand=True, padx=px(12), pady=(px(12), px(6)))
 
         cols = ("codice", "nome", "tipo", "dare", "avere", "saldo")
         self.saldi_tree = ttk.Treeview(tree_frame, columns=cols, show="headings")
@@ -402,12 +408,12 @@ class MainWindow:
         self.saldi_tree.heading("avere", text="Tot. Avere")
         self.saldi_tree.heading("saldo", text="Saldo")
 
-        self.saldi_tree.column("codice", width=70, anchor=tk.CENTER)
-        self.saldi_tree.column("nome", width=200)
-        self.saldi_tree.column("tipo", width=80, anchor=tk.CENTER)
-        self.saldi_tree.column("dare", width=110, anchor=tk.E)
-        self.saldi_tree.column("avere", width=110, anchor=tk.E)
-        self.saldi_tree.column("saldo", width=110, anchor=tk.E)
+        self.saldi_tree.column("codice", width=px(80), anchor=tk.CENTER, stretch=False)
+        self.saldi_tree.column("nome", width=px(280))
+        self.saldi_tree.column("tipo", width=px(90), anchor=tk.CENTER, stretch=False)
+        self.saldi_tree.column("dare", width=px(130), anchor=tk.E, stretch=False)
+        self.saldi_tree.column("avere", width=px(130), anchor=tk.E, stretch=False)
+        self.saldi_tree.column("saldo", width=px(130), anchor=tk.E, stretch=False)
 
         scrollbar = ttk.Scrollbar(tree_frame, orient=tk.VERTICAL, command=self.saldi_tree.yview)
         self.saldi_tree.configure(yscrollcommand=scrollbar.set)
@@ -415,16 +421,27 @@ class MainWindow:
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         self.totali_frame = ttk.Frame(self.saldi_frame)
-        self.totali_frame.pack(fill=tk.X, padx=5, pady=(0, 5))
-        self.totali_label = ttk.Label(self.totali_frame, text="", font=("", 9, "bold"))
-        self.totali_label.pack(side=tk.RIGHT, padx=10)
+        self.totali_frame.pack(fill=tk.X, padx=px(12), pady=(0, px(12)))
+        self.totali_label = ttk.Label(self.totali_frame, text="", style="Forte.TLabel")
+        self.totali_label.pack(side=tk.RIGHT)
 
     # --- Status bar ---
 
     def _build_status_bar(self):
         self.status_var = tk.StringVar(value="Pronto. Tab per navigare, Enter per salvare.")
-        status_bar = ttk.Label(self.root, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W, padding=3)
-        status_bar.pack(fill=tk.X, side=tk.BOTTOM)
+        barra = ttk.Frame(self.root)
+        barra.pack(fill=tk.X, side=tk.BOTTOM)
+        ttk.Separator(barra, orient=tk.HORIZONTAL).pack(fill=tk.X)
+        self.db_label = ttk.Label(barra, text=self._testo_db(self.db.db_path), style="Stato.TLabel")
+        self.db_label.pack(side=tk.RIGHT)
+        ttk.Label(barra, textvariable=self.status_var, anchor=tk.W, style="Stato.TLabel").pack(
+            side=tk.LEFT, fill=tk.X, expand=True
+        )
+
+    @staticmethod
+    def _testo_db(percorso):
+        """Nome del file di database nella barra di stato (il percorso completo è troppo lungo)."""
+        return f"Archivio: {os.path.basename(percorso)}"
 
     # --- Esercizio ---
 
@@ -455,10 +472,10 @@ class MainWindow:
             stato = "Chiuso" if e["data_chiusura"] else "Aperto"
             periodo = periodo_label(e["data_inizio"], e["data_fine"])
             self.esercizio_info = f"{e['descrizione']}  {periodo}  ({stato})"
-            self.esercizio_label.config(text=f"Esercizio: {self.esercizio_info}")
+            self.esercizio_label.config(text=f"{e['descrizione']}  ·  {periodo}  ·  {stato}")
         else:
             self.esercizio_info = ""
-            self.esercizio_label.config(text="Esercizio: --")
+            self.esercizio_label.config(text="Nessun esercizio selezionato")
         self._refresh_giornale()
         self._refresh_saldi()
         self._refresh_causali_cache()
@@ -558,7 +575,7 @@ class MainWindow:
                 "Gli esercizi esistenti sono diventati periodi 01/01 - 31/12.\n"
                 f"Copia di sicurezza del database precedente:\n{self.db.backup_path}",
             )
-        self.db_label.config(text=f"DB: {filepath}")
+        self.db_label.config(text=self._testo_db(filepath))
         if self._modifica_id:
             self._clear_input_row()  # la registrazione in modifica era dell'altro database
         self._selezioni_export = {}  # i conti scelti erano dell'altro database

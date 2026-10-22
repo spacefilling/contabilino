@@ -38,10 +38,11 @@ Per eseguire dal sorgente Python:
   - Python 3.10 o superiore
   - openpyxl (per l'export Excel)
   - reportlab (per l'export PDF)
+  - sv-ttk (tema grafico in stile Windows 11)
 
 Installazione dipendenze:
 
-    pip install openpyxl reportlab
+    pip install openpyxl reportlab sv-ttk
 
 Tkinter è incluso in Python per Windows, non serve installarlo.
 
@@ -83,8 +84,8 @@ Eseguire lo script di build:
 
 Oppure manualmente:
 
-    pip install openpyxl reportlab pyinstaller
-    pyinstaller --onefile --windowed --name Contabilino --hidden-import openpyxl main.py
+    pip install -r requirements.txt
+    pyinstaller --onefile --windowed --name Contabilino --icon risorse\contabilino.ico --hidden-import openpyxl --collect-data sv_ttk main.py
 
 L'eseguibile sarà in: dist\Contabilino.exe
 
