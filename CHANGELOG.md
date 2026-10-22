@@ -1,7 +1,12 @@
 # Changelog
 
-## Non ancora rilasciato
+## 1.7 – 2026-10-22
 
+- Versioni per Mac (Apple Silicon e Intel, `.app`) e Linux, oltre a Windows; build e release automatiche per tutti e tre.
+- Finestra di benvenuto: propone gli archivi di Contabilino trovati nella cartella, crea o apre un archivio; `contabilino.db` si apre subito come prima.
+- File → Apri archivio verifica che il file sia un archivio di Contabilino; File → Mostra la cartella dell'archivio.
+- Su Mac l'archivio sta accanto a `Contabilino.app`; messaggio chiaro se macOS avvia l'app da una posizione temporanea.
+- Documentazione: portabilità in evidenza (non si installa, dati in un solo file, si sposta copiando la cartella).
 - Firma del codice con SignPath Foundation in preparazione: pagina [Code signing policy](https://spacefilling.github.io/contabilino/firma-del-codice/) e firma automatica nel workflow di build, attiva quando il progetto viene approvato.
 
 ## 1.6 – 2026-10-22

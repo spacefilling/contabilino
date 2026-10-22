@@ -1,42 +1,48 @@
 ## Contabilino — Contabilità in partita doppia per piccole attività
 
-Programma autonomo per Windows: registra costi e ricavi in partita doppia, gestisce gli esercizi contabili, mostra i saldi dei conti ed esporta in CSV, Excel e PDF. **Non richiede installazione né Python**: un solo file da avviare.
+Programma per **Windows, Mac e Linux**: registra costi e ricavi in partita doppia, gestisce gli esercizi contabili, mostra saldi e partitari ed esporta in CSV, Excel e PDF.
+
+> **Non si installa.** Un solo file da avviare; i dati stanno in un solo file (`contabilino.db`) accanto al programma. Per il backup o per passare a un altro computer basta copiare la cartella.
 
 ### 🆕 Novità di questa versione
-- **Molto più veloce**: nella 1.5 ogni clic rallentava per colpa del tema grafico. Lo stile Windows 11 ora è disegnato direttamente e l'interfaccia risponde subito, come prima.
-- **Nuova scheda Partitari**: scegli un conto e vedi tutti i suoi movimenti con il saldo progressivo (per un conto padre anche quelli dei sottoconti). Doppio clic su un movimento per aprirlo nel Libro Giornale; pulsante Esporta per CSV, Excel e PDF.
-- **Conti e sottoconti ad albero**: nel piano dei conti, nei Saldi Conti (con il totale di ogni gruppo, da aprire e chiudere) e nella scelta dei conti da esportare. Doppio clic su un conto nei Saldi per aprire il suo partitario.
-- L'export dei Saldi Conti riporta i totali di gruppo, come la scheda.
-- **Icona**: il logo nella barra del titolo e nella barra delle applicazioni viene ora dal file `.ico` con il metodo nativo di Windows, anche nelle finestre di avvio.
-- **Proprietà del file**: `Contabilino.exe` riporta descrizione, versione e copyright di spacefiller (Proprietà → Dettagli).
+- **Anche per Mac e Linux**: app per Mac (Apple Silicon e Intel) ed eseguibile per Linux, portabili come quello per Windows.
+- **Finestra di benvenuto** più chiara: spiega dove stanno i dati e, se nella cartella del programma trova un archivio di Contabilino (anche con un altro nome), lo propone con numero di registrazioni e data di modifica. Poi: crea un nuovo archivio, apri un archivio da un'altra cartella, esci. Se c'è `contabilino.db` si apre subito, come prima.
+- **File → Apri archivio** controlla che il file sia davvero un archivio di Contabilino; nuovo comando **File → Mostra la cartella dell'archivio** (comodo per il backup).
+- Documentazione e sito mettono in evidenza che il programma è portabile.
 - Nessuna modifica al database: gli archivi esistenti si usano così come sono.
 
-**Se vedi ancora l'icona vecchia**: togli Contabilino dalla barra delle applicazioni e aggiungilo di nuovo; per l'icona del file in Esplora risorse esegui `ie4uinit.exe -show` dal Prompt dei comandi (o rinomina il file).
-
 ### ⬇️ Download
-Scarica **`Contabilino.exe`** dalla sezione *Assets* qui sotto. Firma del codice: [Code signing policy](https://spacefilling.github.io/contabilino/firma-del-codice/).
-(Facoltativo: `GUIDA RAPIDA.txt` e `GUIDA ESTESA.txt` sono le guide in italiano.)
+Dalla sezione *Assets* qui sotto scarica il file per il tuo sistema:
+- **Windows**: `Contabilino.exe`
+- **Mac**: `Contabilino-mac-apple-silicon.zip` (M1 e successivi) oppure `Contabilino-mac-intel.zip`
+- **Linux**: `Contabilino-linux.tar.gz` (glibc 2.35 o successiva: Ubuntu 22.04 e seguenti, Debian 12, Fedora 36…)
+
+Firma del codice: [Code signing policy](https://spacefilling.github.io/contabilino/firma-del-codice/). Facoltativo: `GUIDA RAPIDA.txt` e `GUIDA ESTESA.txt` sono le guide in italiano.
 
 ### ▶️ Come si usa
-1. Copia `Contabilino.exe` dove vuoi (anche su una chiavetta USB) e fai **doppio clic**.
-2. **Primo avvio** — Windows può mostrare l'avviso blu *"Windows ha protetto il PC"*: è normale (l'eseguibile non è firmato, non è un virus). Clicca **"Ulteriori informazioni" → "Esegui comunque"**. Capita solo la prima volta.
-3. Al primo avvio scegli **crea un nuovo database** (oppure aprine uno esistente). I dati finiscono in un unico file `contabilino.db` nella stessa cartella del programma.
+**Windows** — copia `Contabilino.exe` in una cartella (anche su chiavetta) e fai doppio clic. La prima volta Windows può mostrare *"Windows ha protetto il PC"*: l'eseguibile non è ancora firmato. Clicca **Ulteriori informazioni → Esegui comunque** (oppure, prima di avviarlo: tasto destro → Proprietà → *Annulla blocco*).
+
+**Mac** — apri lo zip e trascina `Contabilino.app` nella cartella dove vuoi tenere i dati. L'app non è firmata da Apple: la prima volta fai **clic destro → Apri → Apri** (oppure Impostazioni di Sistema → Privacy e sicurezza → *Apri comunque*).
+
+**Linux** — estrai l'archivio nella cartella dove vuoi tenere i dati e avvia `./Contabilino`.
+
+Al primo avvio scegli **Crea un nuovo archivio**: nasce `contabilino.db` accanto al programma e dalle volte successive si apre da solo.
 
 ### 💾 Dati e backup
-- Tutti i dati stanno nel file **`contabilino.db`** accanto all'eseguibile.
+- Tutti i dati stanno nel file **`contabilino.db`** accanto al programma (su Mac accanto a `Contabilino.app`).
 - Per il backup basta **copiare quel file** altrove. Fallo periodicamente.
 - Struttura tipica su chiavetta:
   ```
   CHIAVETTA
-  ├── Contabilino.exe
+  ├── Contabilino.exe   (o Contabilino.app, o Contabilino)
   └── contabilino.db
   ```
 
 ### 📌 Note
-- Sistema operativo: **Windows** (64 bit).
-- L'eseguibile è generato automaticamente da GitHub Actions a partire dal codice di questo tag.
+- Gli eseguibili sono generati automaticamente da GitHub Actions a partire dal codice di questo tag.
 
 ### ✨ Funzioni principali
+- Per Windows, Mac (Apple Silicon e Intel) e Linux, senza installazione.
 - Libro giornale con inserimento rapido (data compatta, autocompletamento conti/causali, importo stile registratore di cassa).
 - Correzione, eliminazione (con scelta sulla numerazione) e storno delle registrazioni.
 - Piano dei conti con conti e sottoconti.
