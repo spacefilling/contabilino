@@ -4,7 +4,7 @@ Dati **inventati**, per provare Contabilino e vedere com'è fatto ogni export.
 
 | File | Contenuto |
 | --- | --- |
-| `contabilino-esempio.db` | database di prova: esercizio 2026, fornitori come sottoconti di 400, clienti come sottoconti di 500, 63 registrazioni |
+| `contabilino-esempio.db` | database di prova: esercizio 2026, fornitori come sottoconti di 400, clienti come sottoconti di 500, le registrazioni di un anno, con incassi e pagamenti |
 | `libro-giornale.pdf` | Libro Giornale |
 | `saldi-conti.pdf` | Saldi Conti |
 | `costi-e-ricavi.pdf` | Costi e Ricavi, con utile dell'esercizio |
