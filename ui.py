@@ -12,6 +12,15 @@ import tkinter as tk
 import webbrowser
 from tkinter import ttk, messagebox, filedialog
 from datetime import date
+from iva import ACQUISTI, CORRISPETTIVI, DOC_CORRISPETTIVI, FATTURA, NOTA_CREDITO, VENDITE
+from iva_ui import (
+    DocumentoIvaDialog,
+    ImpostazioniIvaDialog,
+    LiquidazioneDialog,
+    ModuliDialog,
+    RegistriIvaDialog,
+    tipo_documento_della_registrazione,
+)
 from dialogs import (
     EliminaRegistrazioneDialog,
     GestioneContiDialog,
@@ -132,6 +141,38 @@ class MainWindow:
                 )
             export_menu.add_cascade(label=self._EXPORT[tipo][0], menu=formati_menu)
         menubar.add_cascade(label="Export", menu=export_menu)
+
+        # Moduli facoltativi: compaiono solo se attivati per questo archivio
+        if self.db.modulo_attivo("iva"):
+            iva_menu = tk.Menu(menubar, tearoff=0)
+            for testo, registro, documento in (
+                ("Fattura di acquisto...", ACQUISTI, FATTURA),
+                ("Nota di credito ricevuta...", ACQUISTI, NOTA_CREDITO),
+                (None, None, None),
+                ("Fattura di vendita...", VENDITE, FATTURA),
+                ("Nota di credito emessa...", VENDITE, NOTA_CREDITO),
+                (None, None, None),
+                ("Corrispettivi...", CORRISPETTIVI, DOC_CORRISPETTIVI),
+            ):
+                if testo is None:
+                    iva_menu.add_separator()
+                else:
+                    iva_menu.add_command(label=testo, command=lambda r=registro, d=documento: self._on_documento_iva(r, d))
+            iva_menu.add_separator()
+            iva_menu.add_command(label="Registri IVA...", command=self._on_registri_iva)
+            iva_menu.add_command(label="Liquidazione IVA...", command=self._on_liquidazione_iva)
+            iva_menu.add_separator()
+            iva_menu.add_command(label="Impostazioni IVA...", command=self._on_impostazioni_iva)
+            menubar.add_cascade(label="IVA", menu=iva_menu)
+        if self.db.modulo_attivo("bilancio"):
+            bilancio_menu = tk.Menu(menubar, tearoff=0)
+            bilancio_menu.add_command(label="Collega i conti alle voci di bilancio...", command=self._on_collega_bilancio)
+            bilancio_menu.add_command(label="Bilancio d'esercizio...", command=self._on_bilancio)
+            menubar.add_cascade(label="Bilancio", menu=bilancio_menu)
+
+        strumenti_menu = tk.Menu(menubar, tearoff=0)
+        strumenti_menu.add_command(label="Moduli (IVA, bilancio)...", command=self._on_moduli)
+        menubar.add_cascade(label="Strumenti", menu=strumenti_menu)
 
         aiuto_menu = tk.Menu(menubar, tearoff=0)
         aiuto_menu.add_command(label="Manuale online", command=lambda: webbrowser.open(MANUALE))
@@ -819,6 +860,7 @@ class MainWindow:
         if self._modifica_id:
             self._clear_input_row()  # la registrazione in modifica era dell'altro database
         self._selezioni_export = {}  # i conti scelti erano dell'altro database
+        self._build_menu()  # i moduli attivi dipendono dall'archivio
         self._refresh_conti_cache()
         self.esercizio_id = None
         self._auto_select_esercizio()
@@ -886,6 +928,67 @@ class MainWindow:
             self.giornale_tree.see(str(seleziona))
         self.status_var.set(f"Registrazioni rinumerate in ordine di data ({cambiate} numeri cambiati).")
 
+    # --- Moduli IVA e bilancio ---
+
+    def _on_moduli(self):
+        dlg = ModuliDialog(self.root, self.db)
+        self.root.wait_window(dlg)
+        if dlg.cambiato:
+            self._build_menu()
+            self._refresh_conti_cache()
+            attivi = [n for n, nome in (("iva", "IVA"), ("bilancio", "bilancio")) if self.db.modulo_attivo(n)]
+            self.status_var.set("Moduli attivi: " + (", ".join(
+                {"iva": "IVA", "bilancio": "bilancio"}[n] for n in attivi) if attivi else "nessuno"))
+
+    def _esercizio_aperto_corrente(self):
+        if not self.esercizio_id:
+            messagebox.showwarning("Attenzione", "Selezionare prima un esercizio.")
+            return None
+        esercizio = self.db.get_esercizio(self.esercizio_id)
+        if esercizio["data_chiusura"]:
+            messagebox.showwarning("Attenzione", "L'esercizio selezionato è chiuso.")
+            return None
+        return esercizio
+
+    def _on_documento_iva(self, tipo_registro, tipo_documento, registrazione_id=None):
+        esercizio = (self.db.get_esercizio(self.db.get_registrazione_compatta(registrazione_id)["esercizio_id"])
+                     if registrazione_id else self._esercizio_aperto_corrente())
+        if not esercizio:
+            return
+        dlg = DocumentoIvaDialog(self.root, self.db, esercizio, tipo_registro, tipo_documento, registrazione_id)
+        self.root.wait_window(dlg)
+        if not dlg.result:
+            return
+        self._refresh_conti_cache()
+        self._refresh_giornale()
+        self._refresh_causali_cache()
+        self.giornale_tree.selection_set(str(dlg.result))
+        self.giornale_tree.see(str(dlg.result))
+        reg = self.db.get_registrazione_compatta(dlg.result)
+        self.status_var.set(f"Registrazione n. {reg['numero']} {'modificata' if registrazione_id else 'salvata'}: {reg['descrizione']}")
+
+    def _on_registri_iva(self):
+        RegistriIvaDialog(self.root, self.db, esporta=self._esporta_da_finestra)
+
+    def _on_liquidazione_iva(self):
+        LiquidazioneDialog(self.root, self.db, esporta=self._esporta_da_finestra,
+                           aggiorna_giornale=lambda: (self._refresh_giornale(), self._refresh_saldi()))
+
+    def _on_impostazioni_iva(self):
+        dlg = ImpostazioniIvaDialog(self.root, self.db)
+        self.root.wait_window(dlg)
+        self._refresh_conti_cache()
+
+    def _on_collega_bilancio(self):
+        messagebox.showinfo("Bilancio", "Funzione in preparazione.")
+
+    def _on_bilancio(self):
+        messagebox.showinfo("Bilancio", "Funzione in preparazione.")
+
+    def _esporta_da_finestra(self, report, nome_file, formato):
+        self._salva_su_file(report, nome_file, formato, parent=self.root.focus_get().winfo_toplevel()
+                            if self.root.focus_get() else None)
+
     def _on_gestione_conti(self):
         GestioneContiDialog(self.root, self.db)
         self._refresh_conti_cache()
@@ -939,6 +1042,10 @@ class MainWindow:
                 "non si possono modificare. Per correggerle riaprilo da\n"
                 "Esercizio > Gestione Esercizi, oppure usa lo Storno.",
             )
+            return
+        documento = tipo_documento_della_registrazione(self.db, reg["id"])
+        if documento:
+            self._on_documento_iva(*documento, registrazione_id=reg["id"])
             return
         if not reg["semplice"]:
             self._apri_registrazione_composta(reg)
@@ -1012,6 +1119,12 @@ class MainWindow:
                 self._storna(reg)
             return
 
+        if tipo_documento_della_registrazione(self.db, reg["id"]) and not messagebox.askyesno(
+                "Documento IVA",
+                "Questa registrazione è un documento IVA: eliminandola esce anche dal registro IVA e il suo "
+                "numero di protocollo resta libero.\n\nPer annullare una fattura già emessa o ricevuta è "
+                "più corretto registrare una nota di credito. Eliminare comunque?"):
+            return
         successive = self.db.conta_registrazioni_successive(reg["esercizio_id"], reg["numero"])
         dlg = EliminaRegistrazioneDialog(self.root, reg, successive)
         self.root.wait_window(dlg)
@@ -1045,6 +1158,14 @@ class MainWindow:
 
     def _storna(self, reg):
         """Dialogo di storno; poi mostra dov'è finita la nuova registrazione."""
+        if tipo_documento_della_registrazione(self.db, reg["id"]):
+            messagebox.showinfo(
+                "Documento IVA",
+                "Questa registrazione è un documento IVA: lo storno non aggiornerebbe i registri IVA.\n\n"
+                "Per annullare una fattura registra una nota di credito (menu IVA); per correggerla "
+                "usa Modifica.",
+            )
+            return
         dlg = StornoDialog(self.root, self.db, reg)
         self.root.wait_window(dlg)
         if not dlg.result:
@@ -1120,30 +1241,40 @@ class MainWindow:
             )
             return
 
+        self._salva_su_file(
+            report, f"{nome_base}_{etichetta_anni(esercizio['data_inizio'], esercizio['data_fine'])}", formato,
+        )
+
+    def _salva_su_file(self, report, nome_file, formato, parent=None):
+        """Chiede dove salvare il report e lo scrive nel formato scelto, con messaggi d'errore chiari."""
+        parent = parent or self.root
+        nome_formato, ext = FORMATI[formato]
         filepath = filedialog.asksaveasfilename(
-            title=f"Esporta {tipo_label} ({nome_formato})",
+            parent=parent,
+            title=f"Esporta {report.titolo} ({nome_formato})",
             defaultextension=ext,
             filetypes=[(nome_formato, f"*{ext}")],
-            initialfile=f"{nome_base}_{etichetta_anni(esercizio['data_inizio'], esercizio['data_fine'])}{ext}",
+            initialfile=f"{nome_file}{ext}",
         )
         if not filepath:
             return
-
         try:
             salva_report(report, filepath, formato)
-            self.status_var.set(f"{tipo_label} esportato: {filepath}")
-            messagebox.showinfo("Export", f"{tipo_label} esportato in:\n{filepath}")
+            self.status_var.set(f"{report.titolo} esportato: {filepath}")
+            messagebox.showinfo("Export", f"{report.titolo} esportato in:\n{filepath}", parent=parent)
         except ImportError:
             modulo = "openpyxl" if formato == "xlsx" else "reportlab"
             messagebox.showerror(
                 "Errore",
                 f"Per l'export {nome_formato} è necessario installare {modulo}:\npip install {modulo}",
+                parent=parent,
             )
         except PermissionError:
             messagebox.showerror(
                 "Errore",
                 f"Impossibile scrivere il file:\n{filepath}\n\n"
                 "Se è aperto in un altro programma (Excel, lettore PDF), chiudilo e riprova.",
+                parent=parent,
             )
         except Exception as e:
-            messagebox.showerror("Errore", f"Errore durante l'export:\n{e}")
+            messagebox.showerror("Errore", f"Errore durante l'export:\n{e}", parent=parent)

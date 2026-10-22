@@ -86,6 +86,8 @@ class Database:
             "CREATE TABLE IF NOT EXISTS impostazioni (chiave TEXT PRIMARY KEY, valore TEXT)"
         )
         self.conn.commit()
+        from iva import crea_tabelle as crea_tabelle_iva  # tabelle del modulo IVA, vuote se non usato
+        crea_tabelle_iva(self.conn)
         self._migrate_esercizi()
 
     # --- Impostazioni dell'archivio (moduli attivi, dati dell'azienda...) ---

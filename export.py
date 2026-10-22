@@ -65,6 +65,7 @@ class Report:
     nome_foglio: str = "Report"
     vuoto: bool = field(default=False)  # nessun dato da esportare
     filtro: str = ""  # conti scelti, se l'export non comprende tutti i conti
+    prefisso_pagina: str = ""  # es. "2026/": pagine numerate per anno (registri IVA)
 
 
 def _sottotitolo(db, esercizio_id):
@@ -420,6 +421,144 @@ def contropartita(reg, riga):
     return "Diversi: " + ", ".join(x["codice"] for x in opposti)
 
 
+# --- Registri IVA e liquidazione (modulo IVA) ---
+
+def intestazione_azienda(db):
+    """ "Ragione sociale - P.IVA ..." per l'intestazione delle stampe fiscali ("" se non impostata)."""
+    parti = [db.get_impostazione("azienda_denominazione") or ""]
+    if db.get_impostazione("azienda_partita_iva"):
+        parti.append(f"P.IVA {db.get_impostazione('azienda_partita_iva')}")
+    if db.get_impostazione("azienda_codice_fiscale"):
+        parti.append(f"C.F. {db.get_impostazione('azienda_codice_fiscale')}")
+    return "  -  ".join(p for p in parti if p)
+
+
+def report_registro_iva(db, registro_id, dal, al, nome_periodo):
+    """
+    Registro IVA (vendite, acquisti o corrispettivi) del periodo: una riga per
+    aliquota di ogni documento, in ordine di protocollo, e il riepilogo per aliquota.
+    Le note di credito hanno importi negativi.
+    """
+    from iva import ACQUISTI, ModuloIva
+    modulo = ModuloIva(db)
+    registro = modulo.get_registro(registro_id)
+    acquisti = registro["tipo"] == ACQUISTI
+    righe = []
+    documento = None
+    for r in modulo.righe_registro(registro_id, dal, al):
+        s = modulo.segno_documento(r["tipo_documento"])
+        nuovo = r["documento_id"] != documento
+        documento = r["documento_id"]
+        tipo = {"NOTA_CREDITO": "NC", "AUTOFATTURA": "RC"}.get(r["tipo_documento"], "")
+        if r["reverse_charge"] and not tipo:
+            tipo = "RC"
+        controparte = _conto(r["controparte_codice"], r["controparte_nome"]) if r["controparte_codice"] else ""
+        valori = [
+            r["protocollo"] if nuovo else "",
+            _format_date(r["data_registrazione"]) if nuovo else "",
+            _format_date(r["data_documento"]) if nuovo and r["data_documento"] else "",
+            f"{r['numero_documento'] or ''} {tipo}".strip() if nuovo else "",
+            controparte if nuovo else "",
+            r["aliquota_codice"],
+            s * r["imponibile"],
+            s * r["imposta"],
+        ]
+        if acquisti:
+            valori.append(s * round(r["imposta"] * r["detraibile"] / 100, 2))
+        righe.append(Riga(valori))
+
+    riepilogo = []
+    totali = modulo.totali_registro(registro_id, dal, al)
+    for codice, tot in totali.items():
+        valori = ["", "", "", "", tot["descrizione"], codice, tot["imponibile"], tot["imposta"]]
+        if acquisti:
+            valori.append(tot["detraibile"])
+        riepilogo.append(Riga(valori))
+    valori = ["", "", "", "", "TOTALE", "", sum(x["imponibile"] for x in totali.values()),
+              sum(x["imposta"] for x in totali.values())]
+    if acquisti:
+        valori.append(sum(x["detraibile"] for x in totali.values()))
+    riepilogo.append(Riga(valori, grassetto=True))
+
+    colonne = [
+        Colonna("Prot.", "centro", 6),
+        Colonna("Data reg.", "centro", 10),
+        Colonna("Data doc.", "centro", 10),
+        Colonna("N. doc.", "testo", 10),
+        Colonna("Conto di incasso" if registro["tipo"] == "CORRISPETTIVI" else
+                "Fornitore" if acquisti else "Cliente", "testo", 30),
+        Colonna("Aliquota", "centro", 8),
+        Colonna("Imponibile", "importo", 13),
+        Colonna("Imposta", "importo", 12),
+    ]
+    if acquisti:
+        colonne.append(Colonna("Detraibile", "importo", 12))
+    azienda = intestazione_azienda(db)
+    return Report(
+        titolo=f"{registro['descrizione']} ({registro['codice']})",
+        sottotitolo=f"{nome_periodo}  ({_format_date(dal)} - {_format_date(al)})" + (f"  -  {azienda}" if azienda else ""),
+        colonne=colonne,
+        sezioni=[Sezione(righe or [Riga(["", "", "", "", "Nessun documento nel periodo", "", None, None] + ([None] if acquisti else []))]),
+                 Sezione(riepilogo, titolo="Riepilogo per aliquota")],
+        colonna_nome=None,
+        note="NC = nota di credito (importi negativi); RC = fattura in reverse charge (nel registro "
+             "vendite: integrazione dell'IVA della fattura d'acquisto).",
+        orizzontale=True,
+        nome_foglio=f"Registro {registro['codice']}"[:31],
+        vuoto=False,
+        prefisso_pagina=f"{dal[:4]}/",
+    )
+
+
+def report_liquidazione_iva(db, liq):
+    """Prospetto della liquidazione IVA del periodo (dict di ModuloIva.calcola_liquidazione)."""
+    debito, credito = [], []
+    for d in liq["dettaglio"]:
+        reg = d["registro"]
+        nome = f"{reg['codice']} - {reg['descrizione']}"
+        if d["debito"]:
+            debito.append(Riga([nome, d["debito"]]))
+        if d["credito"]:
+            credito.append(Riga([nome, d["credito"]]))
+    debito.append(Riga(["Totale IVA a debito", liq["iva_debito"]], grassetto=True))
+    credito.append(Riga(["Totale IVA detraibile", liq["iva_credito"]], grassetto=True))
+    calcolo = [
+        Riga(["IVA a debito", liq["iva_debito"]]),
+        Riga(["IVA detraibile", -liq["iva_credito"]]),
+    ]
+    if liq["credito_precedente"]:
+        calcolo.append(Riga(["Credito del periodo precedente", -liq["credito_precedente"]]))
+    if liq["debito_precedente"]:
+        calcolo.append(Riga(["Debito del periodo precedente (sotto 25,82 €)", liq["debito_precedente"]]))
+    if liq["interessi"]:
+        calcolo.append(Riga(["Interessi 1% (liquidazione trimestrale)", liq["interessi"]]))
+    if liq["acconto"]:
+        calcolo.append(Riga(["Acconto versato", -liq["acconto"]]))
+    risultato = liq["risultato"]
+    if risultato < 0:
+        esito = "CREDITO da riportare al periodo successivo"
+    elif liq["da_versare"]:
+        esito = "IVA DA VERSARE"
+    else:
+        esito = "Debito sotto 25,82 €: si riporta al periodo successivo"
+    calcolo.append(Riga([esito, abs(risultato)], grassetto=True))
+    azienda = intestazione_azienda(db)
+    return Report(
+        titolo=f"Liquidazione IVA - {liq['nome']}",
+        sottotitolo=f"Periodo {_format_date(liq['dal'])} - {_format_date(liq['al'])}  -  "
+                    f"liquidazione {'mensile' if liq['periodicita'] == 'M' else 'trimestrale'}"
+                    + (f"  -  {azienda}" if azienda else ""),
+        colonne=[Colonna("Voce", "testo", 60), Colonna("Importo", "importo", 18)],
+        sezioni=[Sezione(debito, titolo="IVA a debito (vendite e corrispettivi)"),
+                 Sezione(credito, titolo="IVA detraibile (acquisti)"),
+                 Sezione(calcolo, titolo="Liquidazione", intestazioni=False)],
+        colonna_nome=None,
+        note="Il versamento (F24) e l'eventuale acconto di dicembre si registrano a parte.",
+        nome_foglio="Liquidazione IVA",
+        prefisso_pagina=f"{liq['anno']}/",
+    )
+
+
 REPORT = {
     "giornale": report_giornale,
     "saldi": report_saldi,
@@ -595,6 +734,7 @@ def _salva_pdf(report, filepath):
     from reportlab.lib.pagesizes import A4, landscape
     from reportlab.lib.styles import ParagraphStyle
     from reportlab.lib.units import mm
+    from reportlab.pdfbase.pdfmetrics import stringWidth
     from reportlab.pdfgen import canvas
     from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
@@ -700,11 +840,15 @@ def _salva_pdf(report, filepath):
                 self.__dict__.update(stato)
                 self.setFont("Helvetica", 7.5)
                 self.setFillColor(colors.HexColor("#666666"))
-                self.drawString(margine, 9 * mm, piede_sinistra)
-                self.drawRightString(
-                    pagina[0] - margine, 9 * mm,
-                    f"Stampato il {stampato}  -  Pagina {self._pageNumber} di {totale}",
-                )
+                destra = f"Stampato il {stampato}  -  Pagina {report.prefisso_pagina}{self._pageNumber} di {totale}"
+                # Il testo a sinistra si accorcia se non ci sta accanto al numero di pagina
+                spazio = pagina[0] - 2 * margine - stringWidth(destra, "Helvetica", 7.5) - 8 * mm
+                sinistra = piede_sinistra
+                while sinistra and stringWidth(sinistra, "Helvetica", 7.5) > spazio:
+                    sinistra = sinistra[:-2].rstrip() + "…" if len(sinistra) > 2 else ""
+                    sinistra = sinistra.replace("……", "…")
+                self.drawString(margine, 9 * mm, sinistra)
+                self.drawRightString(pagina[0] - margine, 9 * mm, destra)
                 super().showPage()
             super().save()
 
