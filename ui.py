@@ -16,6 +16,7 @@ from dialogs import (
     EliminaRegistrazioneDialog,
     GestioneContiDialog,
     GestioneEserciziDialog,
+    RegistrazioneCompostaDialog,
     SelezioneContiDialog,
     StornoDialog,
 )
@@ -227,6 +228,8 @@ class MainWindow:
         self._btn_storno = ttk.Button(azioni_frame, text="Storno...", command=self._on_storno_registrazione)
         for btn in (self._btn_modifica, self._btn_elimina, self._btn_storno):
             btn.pack(side=tk.LEFT, padx=(0, px(6)))
+        ttk.Button(azioni_frame, text="Registrazione composta...",
+                   command=self._apri_registrazione_composta).pack(side=tk.RIGHT)
 
         # --- Riga di input inline ---
         self._build_input_row()
@@ -670,8 +673,8 @@ class MainWindow:
             return
         rows = self.db.get_registrazioni_compatte(self.esercizio_id)
         for row in rows:
-            dare_str = f"{row['dare_codice']} - {row['dare_nome']}"
-            avere_str = f"{row['avere_codice']} - {row['avere_nome']}"
+            dare_str = self._etichetta_lato(row, "dare")
+            avere_str = self._etichetta_lato(row, "avere")
             importo_str = format_importo(row["importo"])
             data_str = format_date_display(row["data"])
             self.giornale_tree.insert(
@@ -680,6 +683,13 @@ class MainWindow:
                 values=(row["numero"], data_str, row["descrizione"],
                         dare_str, avere_str, importo_str),
             )
+
+    @staticmethod
+    def _etichetta_lato(reg, lato):
+        """Conto in Dare o in Avere; se sono più conti (registrazione composta): "Diversi (codici)"."""
+        if reg[f"{lato}_conto_id"] is None:
+            return f"Diversi ({reg[f'{lato}_nome']})"
+        return f"{reg[f'{lato}_codice']} - {reg[f'{lato}_nome']}"
 
     def _refresh_saldi(self):
         """
@@ -930,6 +940,9 @@ class MainWindow:
                 "Esercizio > Gestione Esercizi, oppure usa lo Storno.",
             )
             return
+        if not reg["semplice"]:
+            self._apri_registrazione_composta(reg)
+            return
         self._clear_input_row()
         self._modifica_id = reg["id"]
         self._aggiorna_titolo_input()
@@ -943,6 +956,45 @@ class MainWindow:
             f"Modifica della registrazione n. {reg['numero']}: correggi i campi e premi Salva "
             "(o Enter sull'importo). Esc per annullare."
         )
+
+    def _apri_registrazione_composta(self, reg=None):
+        """Nuova registrazione con più righe, oppure modifica di una esistente (reg)."""
+        if not self.esercizio_id:
+            messagebox.showwarning("Attenzione", "Selezionare prima un esercizio.")
+            return
+        esercizio = self.db.get_esercizio(reg["esercizio_id"] if reg else self.esercizio_id)
+        if esercizio["data_chiusura"]:
+            messagebox.showwarning("Attenzione", "L'esercizio selezionato è chiuso.")
+            return
+        dlg = RegistrazioneCompostaDialog(
+            self.root, self._conti_labels, self._conti_map, esercizio,
+            causali=self.db.get_causali_usate(esercizio["id"]), registrazione=reg,
+        )
+        self.root.wait_window(dlg)
+        if not dlg.result:
+            return
+        data, causale, movimenti = dlg.result
+        fuori_ordine_prima = self.db.conta_numeri_fuori_ordine(esercizio["id"])
+        try:
+            if reg:
+                self.db.modifica_registrazione(reg["id"], data, causale, movimenti)
+                reg_id = reg["id"]
+            else:
+                reg_id = self.db.crea_registrazione(esercizio["id"], data, causale, movimenti)
+        except (ValueError, sqlite3.Error) as e:
+            messagebox.showerror("Errore", str(e))
+            return
+        self._refresh_giornale()
+        self._refresh_causali_cache()
+        self.giornale_tree.selection_set(str(reg_id))
+        self.giornale_tree.see(str(reg_id))
+        numero = self.db.get_registrazione_compatta(reg_id)["numero"]
+        self.status_var.set(f"Registrazione composta n. {numero} {'modificata' if reg else 'salvata'}: {causale}")
+        if self.db.conta_numeri_fuori_ordine(esercizio["id"]) > fuori_ordine_prima:
+            self._chiedi_rinumerazione(
+                f"La registrazione n. {numero} ha una data precedente a registrazioni\n"
+                "con un numero più basso.\n\n", seleziona=reg_id,
+            )
 
     def _on_elimina_registrazione(self):
         reg = self._registrazione_selezionata()

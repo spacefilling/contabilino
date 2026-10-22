@@ -1314,3 +1314,158 @@ class RiportoSaldiDialog(tk.Toplevel):
             messagebox.showerror("Errore", str(e), parent=self)
             return
         self.destroy()
+
+
+class RegistrazioneCompostaDialog(tk.Toplevel):
+    """
+    Registrazione con più righe (es. stipendi, ammortamenti, una fattura con IVA
+    registrata a mano): data, causale e un elenco di conti in Dare o in Avere.
+    Si salva solo se il totale Dare è uguale al totale Avere.
+    Alla chiusura: result = (data_iso, causale, movimenti) oppure None;
+    movimenti è una lista di (conto_id, dare, avere).
+    """
+
+    def __init__(self, parent, conti_labels, conti_map, esercizio, causali=(), registrazione=None):
+        super().__init__(parent)
+        self.result = None
+        self._labels = conti_labels
+        self._map = conti_map
+        self._esercizio = esercizio
+        self._righe = []
+
+        self.title("Modifica registrazione composta" if registrazione else "Nuova registrazione composta")
+        self.resizable(False, False)
+        self.transient(parent)
+        self.grab_set()
+
+        self._build_ui(causali)
+        if registrazione:
+            self._data.set_iso_date(registrazione["data"])
+            self._causale.set_value(registrazione["descrizione"])
+            for r in registrazione["righe"]:
+                self._aggiungi_riga(f"{r['codice']} - {r['nome']}", r["dare"], r["avere"])
+        else:
+            for _ in range(3):
+                self._aggiungi_riga()
+        self._aggiorna_totali()
+        self.bind("<Escape>", lambda e: self.destroy())
+        self._data.focus_set()
+
+        self.update_idletasks()
+        x = parent.winfo_rootx() + (parent.winfo_width() - self.winfo_width()) // 2
+        y = parent.winfo_rooty() + (parent.winfo_height() - self.winfo_height()) // 3
+        self.geometry(f"+{max(0, x)}+{max(0, y)}")
+
+    def _build_ui(self, causali):
+        from widgets import AmountEntry, AutocompleteEntry  # noqa: F401 (usati nelle righe)
+        frame = ttk.Frame(self, padding=px(16))
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        testa = ttk.Frame(frame)
+        testa.pack(fill=tk.X)
+        ttk.Label(testa, text="Data", style="Secondario.TLabel").grid(row=0, column=0, sticky=tk.W)
+        ttk.Label(testa, text="Causale", style="Secondario.TLabel").grid(row=0, column=1, sticky=tk.W, padx=(px(8), 0))
+        self._data = SmartDateEntry(testa, width=12)
+        self._data.grid(row=1, column=0, sticky=tk.W)
+        from widgets import AutocompleteEntry as _Auto
+        self._causale = _Auto(testa, values=list(causali), allow_free_text=True, width=48)
+        self._causale.grid(row=1, column=1, sticky=tk.W + tk.E, padx=(px(8), 0))
+        testa.columnconfigure(1, weight=1)
+
+        self._griglia = ttk.Frame(frame)
+        self._griglia.pack(fill=tk.X, pady=(px(12), 0))
+        for col, testo in enumerate(("Conto", "Dare", "Avere", "")):
+            ttk.Label(self._griglia, text=testo, style="Secondario.TLabel").grid(row=0, column=col, sticky=tk.W, padx=px(3))
+
+        comandi = ttk.Frame(frame)
+        comandi.pack(fill=tk.X, pady=(px(8), 0))
+        ttk.Button(comandi, text="+ Aggiungi riga", command=lambda: self._aggiungi_riga(focus=True)).pack(side=tk.LEFT)
+        self._totali = ttk.Label(comandi, style="Forte.TLabel")
+        self._totali.pack(side=tk.RIGHT)
+        self._differenza = ttk.Label(frame, style="Errore.TLabel")
+        self._differenza.pack(anchor=tk.E)
+
+        btn = ttk.Frame(frame)
+        btn.pack(pady=(px(12), 0))
+        ttk.Button(btn, text="Salva", style="Accent.TButton", command=self._on_salva).pack(side=tk.LEFT, padx=px(4))
+        ttk.Button(btn, text="Annulla", command=self.destroy).pack(side=tk.LEFT, padx=px(4))
+
+    def _aggiungi_riga(self, conto="", dare=0, avere=0, focus=False):
+        from widgets import AmountEntry, AutocompleteEntry
+        r = len(self._righe) + 1
+        conto_e = AutocompleteEntry(self._griglia, values=self._labels, width=40)
+        dare_e = AmountEntry(self._griglia, width=12)
+        avere_e = AmountEntry(self._griglia, width=12)
+        togli = ttk.Button(self._griglia, text="✕", width=3)
+        riga = {"conto": conto_e, "dare": dare_e, "avere": avere_e, "togli": togli}
+        togli.configure(command=lambda: self._togli_riga(riga))
+        for col, w in enumerate((conto_e, dare_e, avere_e, togli)):
+            w.grid(row=r, column=col, padx=px(3), pady=px(2), sticky=tk.W + tk.E)
+        if conto:
+            conto_e.set_value(conto)
+        if dare:
+            dare_e.set_amount(dare)
+        if avere:
+            avere_e.set_amount(avere)
+        for w in (dare_e, avere_e):
+            w.bind("<KeyRelease>", lambda e: self._aggiorna_totali(), add="+")
+            w.bind("<<Paste>>", lambda e: self.after(1, self._aggiorna_totali), add="+")
+        self._righe.append(riga)
+        if focus:
+            conto_e.focus_set()
+        return riga
+
+    def _togli_riga(self, riga):
+        for w in riga.values():
+            w.destroy()
+        self._righe.remove(riga)
+        for r, rr in enumerate(self._righe, 1):
+            for col, key in enumerate(("conto", "dare", "avere", "togli")):
+                rr[key].grid_configure(row=r, column=col)
+        self._aggiorna_totali()
+
+    def _aggiorna_totali(self):
+        dare = sum(r["dare"].get_amount() for r in self._righe)
+        avere = sum(r["avere"].get_amount() for r in self._righe)
+        self._totali.config(text=f"Totale Dare {format_importo(dare) or '0,00'}   ·   "
+                                 f"Totale Avere {format_importo(avere) or '0,00'}")
+        diff = round(dare - avere, 2)
+        self._differenza.config(text="" if not diff else
+                                f"Differenza da sistemare: {format_importo(abs(diff))} in {'Avere' if diff > 0 else 'Dare'}")
+
+    def _on_salva(self):
+        self._data._format()
+        data = self._data.get_iso_date()
+        causale = self._causale.get_value()
+        es = self._esercizio
+        if not data:
+            messagebox.showerror("Errore", "Data non valida (usare GG/MM/AAAA).", parent=self)
+            return
+        if not data_in_periodo(data, es["data_inizio"], es["data_fine"]):
+            messagebox.showerror("Errore", f"La data non rientra nell'esercizio {es['descrizione']} "
+                                 f"({periodo_label(es['data_inizio'], es['data_fine'])}).", parent=self)
+            return
+        if not causale:
+            messagebox.showerror("Errore", "Inserire la causale.", parent=self)
+            return
+        movimenti = []
+        for n, r in enumerate(self._righe, 1):
+            label, dare, avere = r["conto"].get_value(), r["dare"].get_amount(), r["avere"].get_amount()
+            if not label and not dare and not avere:
+                continue  # riga vuota: ignorata
+            if label not in self._map:
+                messagebox.showerror("Errore", f"Riga {n}: scegliere il conto dall'elenco.", parent=self)
+                return
+            if (dare > 0) == (avere > 0):
+                messagebox.showerror("Errore", f"Riga {n}: indicare un importo in Dare oppure in Avere.", parent=self)
+                return
+            movimenti.append((self._map[label], dare, avere))
+        if len(movimenti) < 2:
+            messagebox.showerror("Errore", "Servono almeno due righe.", parent=self)
+            return
+        if round(sum(m[1] for m in movimenti) - sum(m[2] for m in movimenti), 2):
+            messagebox.showerror("Errore", "La registrazione non quadra: il totale Dare deve essere "
+                                 "uguale al totale Avere.", parent=self)
+            return
+        self.result = (data, causale, movimenti)
+        self.destroy()

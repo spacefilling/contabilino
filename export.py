@@ -5,6 +5,7 @@ Libro giornale, saldi conti, costi e ricavi, partitari dei conti.
 Ogni report viene prima costruito come tabella (colonne e sezioni di righe),
 poi scritto nel formato scelto: CSV, Excel e PDF contengono gli stessi dati.
 Gli export leggono soltanto il database, con le stesse query delle schede.
+Le registrazioni con più righe (es. fatture con IVA) sono gestite ovunque.
 """
 
 import csv
@@ -95,34 +96,77 @@ def _ha_movimenti(saldo):
 # --- Report ---
 
 def report_giornale(db, esercizio_id):
+    """
+    Libro giornale. Se tutte le registrazioni hanno un conto in Dare e uno in Avere
+    resta il formato compatto di sempre (una riga per registrazione); se ce n'è almeno
+    una con più righe (es. fattura con IVA) si usa il formato classico, una riga per
+    conto movimentato, con Dare e Avere separati.
+    """
     rows = db.get_giornale_export(esercizio_id)
-    righe = [
-        Riga([
-            row["numero"],
-            _format_date(row["data"]),
-            row["descrizione"],
-            _conto(row["dare_codice"], row["dare_nome"]),
-            _conto(row["avere_codice"], row["avere_nome"]),
-            row["importo"],
-        ])
-        for row in rows
-    ]
+    sottotitolo = _sottotitolo(db, esercizio_id)
+    if all(r["semplice"] for r in rows):
+        righe = [
+            Riga([
+                row["numero"],
+                _format_date(row["data"]),
+                row["descrizione"],
+                _conto(row["dare_codice"], row["dare_nome"]),
+                _conto(row["avere_codice"], row["avere_nome"]),
+                row["importo"],
+            ])
+            for row in rows
+        ]
+        return Report(
+            titolo="Libro Giornale",
+            sottotitolo=sottotitolo,
+            colonne=[
+                Colonna("N.", "centro", 6),
+                Colonna("Data", "centro", 12),
+                Colonna("Causale", "testo", 34),
+                Colonna("Conto Dare", "testo", 26),
+                Colonna("Conto Avere", "testo", 26),
+                Colonna("Importo", "importo", 14),
+            ],
+            sezioni=[Sezione(righe)],
+            colonna_nome=None,
+            orizzontale=True,
+            nome_foglio="Libro Giornale",
+            vuoto=not righe,
+        )
+
+    righe = []
+    tot_dare = tot_avere = 0
+    for row in rows:
+        for k, riga in enumerate(row["righe"]):
+            prima = k == 0
+            righe.append(Riga([
+                row["numero"] if prima else "",
+                _format_date(row["data"]) if prima else "",
+                row["descrizione"] if prima else "",
+                _conto(riga["codice"], riga["nome"]),
+                riga["dare"] or None,
+                riga["avere"] or None,
+            ], rientro=0 if riga["dare"] else 1))
+            tot_dare += riga["dare"]
+            tot_avere += riga["avere"]
+    righe.append(Riga(["", "", "TOTALE", "", tot_dare, tot_avere], grassetto=True))
     return Report(
         titolo="Libro Giornale",
-        sottotitolo=_sottotitolo(db, esercizio_id),
+        sottotitolo=sottotitolo,
         colonne=[
             Colonna("N.", "centro", 6),
             Colonna("Data", "centro", 12),
-            Colonna("Causale", "testo", 34),
-            Colonna("Conto Dare", "testo", 26),
-            Colonna("Conto Avere", "testo", 26),
-            Colonna("Importo", "importo", 14),
+            Colonna("Causale", "testo", 40),
+            Colonna("Conto", "testo", 36),
+            Colonna("Dare", "importo", 14),
+            Colonna("Avere", "importo", 14),
         ],
         sezioni=[Sezione(righe)],
-        colonna_nome=None,
+        colonna_nome=3,
+        note="Una riga per ogni conto movimentato; i conti in Avere sono rientrati.",
         orizzontale=True,
         nome_foglio="Libro Giornale",
-        vuoto=not righe,
+        vuoto=not rows,
     )
 
 
@@ -356,15 +400,24 @@ def movimenti_partitario(db, esercizio_id, conto_ids):
     """
     movimenti = {cid: [] for cid in conto_ids}
     for reg in db.get_registrazioni_compatte(esercizio_id):
-        if reg["dare_conto_id"] in movimenti:
-            movimenti[reg["dare_conto_id"]].append(
-                (reg, _conto(reg["avere_codice"], reg["avere_nome"]), reg["importo"], 0)
-            )
-        if reg["avere_conto_id"] in movimenti:
-            movimenti[reg["avere_conto_id"]].append(
-                (reg, _conto(reg["dare_codice"], reg["dare_nome"]), 0, reg["importo"])
+        for riga in reg["righe"]:
+            if riga["conto_id"] not in movimenti:
+                continue
+            movimenti[riga["conto_id"]].append(
+                (reg, contropartita(reg, riga), riga["dare"], riga["avere"])
             )
     return movimenti
+
+
+def contropartita(reg, riga):
+    """
+    L'altro conto della registrazione rispetto a una sua riga: il conto del lato
+    opposto se è uno solo, altrimenti "Diversi" con i codici (es. fattura con IVA).
+    """
+    opposti = [x for x in reg["righe"] if (x["avere"] if riga["dare"] else x["dare"])]
+    if len(opposti) == 1:
+        return _conto(opposti[0]["codice"], opposti[0]["nome"])
+    return "Diversi: " + ", ".join(x["codice"] for x in opposti)
 
 
 REPORT = {

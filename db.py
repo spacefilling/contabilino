@@ -67,14 +67,52 @@ class Database:
         self._migrate()
 
     def _migrate(self):
-        """Aggiorna la struttura dei DB creati con le versioni precedenti."""
+        """
+        Aggiorna la struttura dei DB creati con le versioni precedenti.
+        Le aggiunte per i moduli IVA e bilancio sono solo tabelle e colonne nuove:
+        i dati esistenti non vengono toccati e chi non usa i moduli non vede differenze.
+        """
         cursor = self.conn.cursor()
         cursor.execute("PRAGMA table_info(conti)")
         columns = [row[1] for row in cursor.fetchall()]
         if "padre_id" not in columns:
             cursor.execute("ALTER TABLE conti ADD COLUMN padre_id INTEGER REFERENCES conti(id)")
             self.conn.commit()
+        if "voce_bilancio" not in columns:
+            # Voce dello schema di bilancio (art. 2424/2425 c.c.) a cui il conto è collegato: facoltativa
+            cursor.execute("ALTER TABLE conti ADD COLUMN voce_bilancio TEXT")
+            self.conn.commit()
+        cursor.execute(
+            "CREATE TABLE IF NOT EXISTS impostazioni (chiave TEXT PRIMARY KEY, valore TEXT)"
+        )
+        self.conn.commit()
         self._migrate_esercizi()
+
+    # --- Impostazioni dell'archivio (moduli attivi, dati dell'azienda...) ---
+
+    def get_impostazione(self, chiave, predefinito=None):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT valore FROM impostazioni WHERE chiave = ?", (chiave,))
+        riga = cursor.fetchone()
+        return riga[0] if riga else predefinito
+
+    def set_impostazione(self, chiave, valore):
+        with self.conn:
+            if valore is None:
+                self.conn.execute("DELETE FROM impostazioni WHERE chiave = ?", (chiave,))
+            else:
+                self.conn.execute(
+                    "INSERT INTO impostazioni (chiave, valore) VALUES (?, ?) "
+                    "ON CONFLICT(chiave) DO UPDATE SET valore = excluded.valore",
+                    (chiave, str(valore)),
+                )
+
+    def modulo_attivo(self, nome):
+        """Moduli facoltativi: "iva", "bilancio". Spenti finché l'utente non li attiva."""
+        return self.get_impostazione(f"modulo_{nome}") == "1"
+
+    def imposta_modulo(self, nome, attivo):
+        self.set_impostazione(f"modulo_{nome}", "1" if attivo else "0")
 
     def _migrate_esercizi(self):
         """
@@ -687,32 +725,69 @@ class Database:
         )
         return cursor.fetchall()
 
-    _SELECT_COMPATTA = """
-        SELECT r.id, r.esercizio_id, r.numero, r.data, r.descrizione,
-               md.conto_id as dare_conto_id, cd.codice as dare_codice, cd.nome as dare_nome,
-               ma.conto_id as avere_conto_id, ca.codice as avere_codice, ca.nome as avere_nome,
-               md.dare as importo
-        FROM registrazioni r
-        JOIN movimenti md ON md.registrazione_id = r.id AND md.dare > 0
-        JOIN movimenti ma ON ma.registrazione_id = r.id AND ma.avere > 0
-        JOIN conti cd ON cd.id = md.conto_id
-        JOIN conti ca ON ca.id = ma.conto_id
-    """
-
-    def get_registrazioni_compatte(self, esercizio_id):
-        """Una riga per registrazione con conto dare, conto avere e importo."""
+    def _righe_registrazioni(self, condizione, parametri):
+        """Righe (movimenti) delle registrazioni scelte, con i dati del conto, in ordine."""
         cursor = self.conn.cursor()
         cursor.execute(
-            self._SELECT_COMPATTA + " WHERE r.esercizio_id = ? ORDER BY r.data, r.numero",
-            (esercizio_id,),
+            f"""
+            SELECT r.id, r.esercizio_id, r.numero, r.data, r.descrizione,
+                   m.id AS movimento_id, m.conto_id, c.codice, c.nome, m.dare, m.avere
+            FROM registrazioni r
+            JOIN movimenti m ON m.registrazione_id = r.id
+            JOIN conti c ON c.id = m.conto_id
+            WHERE {condizione}
+            ORDER BY r.data, r.numero, r.id, m.id
+            """,
+            parametri,
         )
         return cursor.fetchall()
 
+    @staticmethod
+    def _compatta(righe):
+        """
+        Una voce per registrazione. Per le registrazioni semplici (un conto in Dare e
+        uno in Avere) è il formato di sempre: dare_*, avere_*, importo. Per quelle con
+        più righe (es. fattura con IVA) dare_conto_id/avere_conto_id sono None se il
+        lato ha più conti, dare_nome/avere_nome li elencano, e "righe" contiene tutto.
+        """
+        registrazioni = {}
+        for r in righe:
+            reg = registrazioni.get(r["id"])
+            if reg is None:
+                reg = registrazioni[r["id"]] = {
+                    "id": r["id"], "esercizio_id": r["esercizio_id"], "numero": r["numero"],
+                    "data": r["data"], "descrizione": r["descrizione"], "righe": [],
+                }
+            reg["righe"].append({
+                "movimento_id": r["movimento_id"], "conto_id": r["conto_id"], "codice": r["codice"],
+                "nome": r["nome"], "dare": r["dare"], "avere": r["avere"],
+            })
+        risultato = []
+        for reg in registrazioni.values():
+            in_dare = [x for x in reg["righe"] if x["dare"]]
+            in_avere = [x for x in reg["righe"] if x["avere"]]
+            for lato, righe_lato in (("dare", in_dare), ("avere", in_avere)):
+                if len(righe_lato) == 1:
+                    reg[f"{lato}_conto_id"] = righe_lato[0]["conto_id"]
+                    reg[f"{lato}_codice"] = righe_lato[0]["codice"]
+                    reg[f"{lato}_nome"] = righe_lato[0]["nome"]
+                else:
+                    reg[f"{lato}_conto_id"] = None
+                    reg[f"{lato}_codice"] = "diversi"
+                    reg[f"{lato}_nome"] = ", ".join(x["codice"] for x in righe_lato)
+            reg["importo"] = round(sum(x["dare"] for x in reg["righe"]), 2)
+            reg["semplice"] = len(in_dare) == 1 and len(in_avere) == 1 and len(reg["righe"]) == 2
+            risultato.append(reg)
+        return risultato
+
+    def get_registrazioni_compatte(self, esercizio_id):
+        """Una voce per registrazione dell'esercizio (vedi _compatta), in ordine di data e numero."""
+        return self._compatta(self._righe_registrazioni("r.esercizio_id = ?", (esercizio_id,)))
+
     def get_registrazione_compatta(self, registrazione_id):
         """Una sola registrazione, nello stesso formato (None se non esiste)."""
-        cursor = self.conn.cursor()
-        cursor.execute(self._SELECT_COMPATTA + " WHERE r.id = ?", (registrazione_id,))
-        return cursor.fetchone()
+        regs = self._compatta(self._righe_registrazioni("r.id = ?", (registrazione_id,)))
+        return regs[0] if regs else None
 
     def get_causali_usate(self, esercizio_id=None):
         """Restituisce le causali già utilizzate (per autocompletamento)."""
@@ -729,5 +804,15 @@ class Database:
         return [row[0] for row in cursor.fetchall()]
 
     def get_giornale_export(self, esercizio_id):
-        """Dati per export del libro giornale (formato compatto)."""
+        """Dati per export del libro giornale: una voce per registrazione, con tutte le righe."""
         return self.get_registrazioni_compatte(esercizio_id)
+
+    def ha_registrazioni_composte(self, esercizio_id):
+        """True se nell'esercizio c'è almeno una registrazione con più di due righe."""
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """SELECT 1 FROM movimenti m JOIN registrazioni r ON r.id = m.registrazione_id
+               WHERE r.esercizio_id = ? GROUP BY m.registrazione_id HAVING COUNT(*) > 2 LIMIT 1""",
+            (esercizio_id,),
+        )
+        return cursor.fetchone() is not None
