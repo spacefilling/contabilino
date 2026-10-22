@@ -38,6 +38,20 @@ jobs:
           CONTABILINO_ZOOM: ${{ matrix.zoom }}
         run: python strumenti/screenshot.py screenshot-${{ matrix.zoom }}
 
+      # Prova dell'eseguibile: tema e icona devono esserci anche nell'.exe
+      - name: Compila e avvia l'eseguibile
+        if: matrix.zoom == '100'
+        shell: powershell
+        run: |
+          pyinstaller --onefile --windowed --name Contabilino --icon risorse/contabilino.ico --hidden-import openpyxl --collect-data sv_ttk main.py
+          Copy-Item esempi/contabilino-esempio.db dist/contabilino.db
+          Start-Process explorer.exe (Resolve-Path dist)
+          Start-Sleep -Seconds 4
+          $app = Start-Process -FilePath dist/Contabilino.exe -WorkingDirectory dist -PassThru
+          Start-Sleep -Seconds 12
+          python -c "from PIL import ImageGrab; ImageGrab.grab(all_screens=True).save('screenshot-100/09-eseguibile.png')"
+          Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue
+
       - name: Carica le immagini
         if: always()
         uses: actions/upload-artifact@v4
