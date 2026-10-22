@@ -45,6 +45,7 @@ FONT_PICCOLO = "Contabilino.Piccolo"
 
 _icone = []  # riferimenti alle immagini: Tk le perde se Python le libera
 _font = []  # idem per i font creati da Python
+ICONA_DA_ICO = False  # True quando l'icona della finestra viene dal file .ico (Windows)
 
 
 def abilita_dpi():
@@ -283,11 +284,13 @@ def imposta_icona(root):
         root.iconphoto(True, *immagini)
     except tk.TclError:
         pass
+    global ICONA_DA_ICO
     ico = percorso_risorsa(os.path.join("risorse", "contabilino.ico"))
     if sys.platform == "win32" and os.path.exists(ico):
         try:
             root.iconbitmap(ico)
             root.iconbitmap(default=ico)
+            ICONA_DA_ICO = True
         except tk.TclError:
             pass
 

@@ -83,7 +83,7 @@ def main():
     root.attributes("-topmost", True)
     root.focus_force()
 
-    controlli.append(("icona .ico della finestra impostata", "contabilino.ico" in str(root.wm_iconbitmap())))
+    controlli.append(("icona della finestra dal file .ico", tema.ICONA_DA_ICO))
 
     # 1. Libro giornale con una registrazione selezionata
     righe = w.giornale_tree.get_children()
