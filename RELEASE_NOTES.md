@@ -14,7 +14,7 @@ Programma autonomo per Windows: registra costi e ricavi in partita doppia, gesti
 **Se vedi ancora l'icona vecchia**: togli Contabilino dalla barra delle applicazioni e aggiungilo di nuovo; per l'icona del file in Esplora risorse esegui `ie4uinit.exe -show` dal Prompt dei comandi (o rinomina il file).
 
 ### ⬇️ Download
-Scarica **`Contabilino.exe`** dalla sezione *Assets* qui sotto.
+Scarica **`Contabilino.exe`** dalla sezione *Assets* qui sotto. Firma del codice: [Code signing policy](https://spacefilling.github.io/contabilino/firma-del-codice/).
 (Facoltativo: `GUIDA RAPIDA.txt` e `GUIDA ESTESA.txt` sono le guide in italiano.)
 
 ### ▶️ Come si usa

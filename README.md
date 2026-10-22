@@ -11,7 +11,7 @@
 
 **Sito e manuale:** [spacefilling.github.io/contabilino](https://spacefilling.github.io/contabilino/) · [Manuale](https://spacefilling.github.io/contabilino/manuale/)
 
-**Download:** [Contabilino.exe (ultima versione)](https://github.com/spacefilling/contabilino/releases/latest/download/Contabilino.exe)
+**Download:** [Contabilino.exe (ultima versione)](https://github.com/spacefilling/contabilino/releases/latest/download/Contabilino.exe) · [Code signing policy](https://spacefilling.github.io/contabilino/firma-del-codice/)
 
 ![Contabilino su Windows 11: libro giornale con la riga di inserimento rapido](docs/assets/schermate/01-libro-giornale.png)
 
@@ -102,7 +102,8 @@ Su Windows c'è anche [`build.bat`](build.bat). Ogni tag `vX.Y` pubblicato su Gi
 | `export.py` | report e scrittura in CSV, Excel e PDF |
 | `dateutils.py` | date e periodi degli esercizi |
 | `icona.py` | logo e caselle di spunta incorporati (generato da `strumenti/genera_icone.py`) |
-| `strumenti/` | generazione di logo e icone, screenshot automatici su Windows |
+| `strumenti/` | generazione di logo, icone e informazioni di versione dell'eseguibile, screenshot e tempi di risposta su Windows |
+| `.signpath/` | configurazione per la firma del codice con SignPath |
 
 ## Note e limiti
 
@@ -114,6 +115,10 @@ Su Windows c'è anche [`build.bat`](build.bat). Ogni tag `vX.Y` pubblicato su Gi
 ## Contribuire
 
 Segnalazioni di errori e proposte sono benvenute nelle [issue](https://github.com/spacefilling/contabilino/issues), così come le pull request.
+
+## Firma del codice
+
+Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/). La firma è in fase di attivazione: dettagli, ruoli e privacy nella [Code signing policy](https://spacefilling.github.io/contabilino/firma-del-codice/).
 
 ## Licenza
 

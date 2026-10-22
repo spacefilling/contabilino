@@ -1,5 +1,9 @@
 # Changelog
 
+## Non ancora rilasciato
+
+- Firma del codice con SignPath Foundation in preparazione: pagina [Code signing policy](https://spacefilling.github.io/contabilino/firma-del-codice/) e firma automatica nel workflow di build, attiva quando il progetto viene approvato.
+
 ## 1.6 – 2026-10-22
 
 - **Interfaccia molto più veloce**: il tema Sun Valley della 1.5 rallentava ogni clic (circa 70 ms per selezionare una riga); lo stile Windows 11 ora è disegnato direttamente, con tempi di risposta 7-8 volte più bassi.

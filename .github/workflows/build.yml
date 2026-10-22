@@ -1,7 +1,14 @@
 name: Build Contabilino.exe
 
-# Si avvia quando si pubblica una versione (tag tipo v1.0.0)
+# Si avvia quando si pubblica una versione (tag tipo v1.6)
 # oppure manualmente dal tab "Actions" della repo (Run workflow).
+#
+# Firma con SignPath Foundation: si attiva da sola quando nelle impostazioni del
+# repository (Settings > Secrets and variables > Actions) ci sono
+#   variabili: SIGNPATH_ORGANIZATION_ID, SIGNPATH_PROJECT_SLUG, SIGNPATH_SIGNING_POLICY_SLUG
+#   secret:    SIGNPATH_API_TOKEN
+# Ogni richiesta di firma va poi approvata a mano su SignPath. Senza queste
+# impostazioni la Release contiene l'eseguibile non firmato.
 on:
   push:
     tags:
@@ -10,10 +17,12 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 jobs:
   build-windows:
     runs-on: windows-latest
+    timeout-minutes: 330  # lascia il tempo di approvare la firma su SignPath
 
     steps:
       - name: Checkout del codice
@@ -35,20 +44,46 @@ jobs:
 
       # L'exe è sempre scaricabile dalla pagina del run (tab Actions > artifacts),
       # anche per un semplice "Run workflow" senza pubblicare una versione.
+      # È anche l'artifact che SignPath scarica per firmarlo.
       - name: Carica l'eseguibile come artifact
+        id: artifact-non-firmato
         uses: actions/upload-artifact@v4
         with:
           name: Contabilino-windows
           path: dist/Contabilino.exe
 
-      # Ricava il numero di versione dal tag (es. v1.1 -> 1.1) per il titolo.
+      # Ricava il numero di versione dal tag (es. v1.6 -> 1.6) per il titolo e la firma.
       - name: Ricava versione dal tag
         if: startsWith(github.ref, 'refs/tags/')
         id: ver
         shell: bash
         run: echo "num=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-      # Se è stato pubblicato un tag (es. v1.1), allega l'exe a una Release.
+      - name: Firma con SignPath
+        if: startsWith(github.ref, 'refs/tags/') && vars.SIGNPATH_ORGANIZATION_ID != ''
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          github-artifact-id: ${{ steps.artifact-non-firmato.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 18000
+          output-artifact-directory: firmato
+          parameters: |
+            version: ${{ toJSON(steps.ver.outputs.num) }}
+
+      - name: Usa l'eseguibile firmato e verifica la firma
+        if: startsWith(github.ref, 'refs/tags/') && vars.SIGNPATH_ORGANIZATION_ID != ''
+        shell: powershell
+        run: |
+          Copy-Item firmato/Contabilino.exe dist/Contabilino.exe -Force
+          $firma = Get-AuthenticodeSignature dist/Contabilino.exe
+          Write-Output "Firma: $($firma.Status) - $($firma.SignerCertificate.Subject)"
+          if ($firma.Status -ne 'Valid') { throw "La firma dell'eseguibile non è valida" }
+
+      # Se è stato pubblicato un tag (es. v1.6), allega l'exe a una Release.
       - name: Pubblica la Release con l'exe
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
