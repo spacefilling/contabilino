@@ -120,9 +120,13 @@ jobs:
         run: |
           VERSIONE=$(python -c "from version import VERSIONE; print(VERSIONE)")
           PLIST=dist/Contabilino.app/Contents/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSIONE" "$PLIST"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSIONE" "$PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSHumanReadableCopyright string Copyright (C) 2026 spacefiller - GNU GPL v3" "$PLIST"
+          imposta() {  # crea o sostituisce una voce di Info.plist
+            /usr/libexec/PlistBuddy -c "Delete :$1" "$PLIST" 2>/dev/null || true
+            /usr/libexec/PlistBuddy -c "Add :$1 string $2" "$PLIST"
+          }
+          imposta CFBundleShortVersionString "$VERSIONE"
+          imposta CFBundleVersion "$VERSIONE"
+          imposta NSHumanReadableCopyright "Copyright (C) 2026 spacefiller - GNU GPL v3"
           codesign --force --deep --sign - dist/Contabilino.app
           ditto -c -k --keepParent dist/Contabilino.app Contabilino-mac-${{ matrix.nome }}.zip
 
