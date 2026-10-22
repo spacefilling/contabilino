@@ -431,10 +431,52 @@ LIMITI DA CONOSCERE
     passivo e di ricavo un saldo normale è negativo.
   - Se fornitori e clienti sono solo sottoconti di 400 e 500, i loro
     partitari mostrano le fatture, non i pagamenti (vedi sezione 8).
-  - Una fattura con IVA detraibile si registra in due righe: imponibile
-    sul conto di costo, IVA su un conto "IVA a credito" (tipo ATTIVO).
-    Contabilino non tiene i registri IVA.
+  - Senza modulo IVA una fattura con IVA si registra con una
+    registrazione composta (costo, IVA a credito, fornitore).
   - Non è un software fiscale e non sostituisce il commercialista.
+
+
+================================================================================
+MODULI FACOLTATIVI: GESTIONE IVA E BILANCIO CIVILISTICO
+================================================================================
+
+Si attivano per l'archivio da Strumenti > Moduli. Spenti, il programma
+funziona come prima e non si perde nulla. Il manuale online spiega tutto
+nei dettagli: https://spacefilling.github.io/contabilino/manuale/#iva
+
+REGISTRAZIONE COMPOSTA (sempre disponibile)
+  Pulsante "Registrazione composta...": data, causale e piu' righe con un
+  conto in Dare o in Avere. Si salva solo se Dare = Avere.
+
+GESTIONE IVA
+  - Menu IVA: fattura di acquisto, nota di credito ricevuta, fattura di
+    vendita, nota di credito emessa, corrispettivi. La scrittura contabile
+    (costo/ricavo, IVA, fornitore/cliente) viene preparata dal programma.
+  - IVA indetraibile (% per riga), reverse charge (IVA nei registri
+    acquisti e vendite), corrispettivi con scorporo dell'IVA.
+  - Registri IVA sezionali configurabili; stampa per mese, trimestre o
+    anno con riepilogo per aliquota.
+  - Liquidazione mensile o trimestrale (interessi 1%), credito riportato,
+    debito sotto 25,82 euro rinviato, acconto; giroconto su Erario c/IVA.
+  - Impostazioni IVA: periodicita', conti, registri, aliquote, dati
+    dell'azienda per le stampe.
+  - Una fattura si corregge con Modifica; si annulla con una nota di
+    credito (lo storno non e' ammesso).
+
+BILANCIO CIVILISTICO
+  - Schemi ordinario (artt. 2424-2425 c.c.), abbreviato (art. 2435-bis),
+    micro-imprese (art. 2435-ter), con confronto con l'esercizio
+    precedente e controlli (quadratura, conti non collegati...).
+  - Bilancio > Collega i conti alle voci di bilancio: ogni conto a una
+    voce dello schema ordinario (un sottoconto senza voce usa quella del
+    padre); facoltativo e anche parziale; proposte automatiche dai nomi.
+  - Si calcola dopo le scritture di assestamento e prima di quelle di
+    chiusura. Nota integrativa, rendiconto e deposito XBRL esclusi.
+
+PIANO DEI CONTI COMPLETO
+  Creando un archivio nuovo si sceglie tra il piano semplice (6 conti,
+  come sempre) e quello completo (circa 200 conti gia' collegati al
+  bilancio, con IVA e bilancio attivati).
 
 
 ================================================================================

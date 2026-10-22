@@ -1,5 +1,14 @@
 # Changelog
 
+## Non ancora rilasciato
+
+- **Gestione IVA** (modulo facoltativo): registri sezionali configurabili (vendite, acquisti, corrispettivi), fatture e note di credito, corrispettivi con scorporo, reverse charge con integrazione nel registro vendite, IVA indetraibile per riga; protocollo per registro e anno; stampa dei registri per mese, trimestre o anno con riepilogo per aliquota; liquidazione mensile o trimestrale con interessi dell'1%, credito riportato, minimo di 25,82 euro, acconto e giroconto su Erario c/IVA.
+- **Bilancio civilistico** (modulo facoltativo): schemi ordinario (artt. 2424-2425 c.c.), abbreviato (art. 2435-bis) e micro-imprese (art. 2435-ter), confronto con l'esercizio precedente, unità di euro, controlli (quadratura, conti non collegati, saldi opposti, scritture di chiusura); collegamento facoltativo dei conti alle voci con proposte automatiche.
+- **Piano dei conti completo** (circa 200 conti collegati al bilancio) proposto alla creazione di un archivio nuovo; il piano semplice resta la scelta predefinita.
+- **Registrazioni composte** con più di due conti, gestite in giornale, partitari, saldi ed export (libro giornale in formato classico quando servono).
+- Strumenti → Moduli per attivare o spegnere IVA e bilancio; con i moduli spenti il programma funziona come prima.
+- Nessun dato esistente viene modificato: solo tabelle e colonne nuove, vuote finché non si usano.
+
 ## 1.7 – 2026-10-22
 
 - Versioni per Mac (Apple Silicon e Intel, `.app`) e Linux, oltre a Windows; build e release automatiche per tutti e tre.

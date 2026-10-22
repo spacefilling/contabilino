@@ -70,6 +70,9 @@
      cancellano: si possono solo stornare.
    - Scheda  Saldi Conti : vedi i totali, conti e sottoconti ad albero.
    - Scheda  Partitari : scegli un conto e vedi tutti i suoi movimenti.
+   - Registrazione composta... : operazioni con piu' di due conti.
+   - Strumenti > Moduli : attiva (se ti servono) la gestione IVA e il
+     bilancio civilistico. Spenti, il programma funziona come sempre.
    - Menu  Export : salva in CSV, Excel o PDF il Libro Giornale,
      i Saldi Conti, il report Costi e Ricavi e i Partitari
      (fornitori, clienti, banca...).

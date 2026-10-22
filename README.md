@@ -33,7 +33,12 @@
 - **Costi e ricavi**: solo i conti di costo e di ricavo, con il totale di ogni gruppo e il risultato dell'esercizio (utile o perdita).
 - **Partitari**: una scheda per consultare i movimenti di un conto (clienti, fornitori, banca, costi, ricavi…) con data, numero, causale, contropartita, Dare, Avere e saldo progressivo, e l'export di tutti i partitari.
 - **Scelta dei conti da esportare**: tutti, oppure quelli spuntati in un elenco, anche per intervallo di codici (es. da 401 a 449) o cercandoli per nome.
+- **Registrazioni composte** con più conti (stipendi, ammortamenti, fatture con IVA).
 - **Export in CSV, Excel e PDF** di tutti i report. Il PDF è pronto da stampare o da mandare al commercialista.
+
+**Moduli facoltativi** (Strumenti → Moduli; spenti, il programma funziona come prima):
+- **Gestione IVA**: fatture e note di credito di acquisto e vendita, corrispettivi, reverse charge, IVA indetraibile; registri IVA sezionali configurabili, stampabili per mese, trimestre o anno; liquidazione mensile o trimestrale con giroconto su Erario c/IVA.
+- **Bilancio civilistico**: stato patrimoniale e conto economico negli schemi del Codice civile (ordinario artt. 2424-2425, abbreviato art. 2435-bis, micro-imprese art. 2435-ter), con confronto con l'esercizio precedente e controlli. I conti si collegano alle voci, anche solo in parte; per gli archivi nuovi c'è un piano dei conti completo già collegato.
 
 ## Download e avvio
 
@@ -116,7 +121,10 @@ Su Windows c'è anche [`build.bat`](build.bat). Ogni tag `vX.Y` pubblicato su Gi
 | `dialogs.py` | esercizi, piano dei conti, eliminazione e storno, scelta dei conti da esportare |
 | `widgets.py` | campi data, importo e autocompletamento |
 | `db.py` | database SQLite e aggiornamento automatico del formato |
-| `export.py` | report e scrittura in CSV, Excel e PDF |
+| `export.py` | report e scrittura in CSV, Excel e PDF (anche registri IVA, liquidazione, bilancio) |
+| `iva.py`, `iva_ui.py` | modulo IVA: registri, documenti, liquidazione |
+| `bilancio_schemi.py`, `bilancio.py`, `bilancio_ui.py` | modulo bilancio: schemi del Codice civile, calcolo, finestre |
+| `piano_base.py` | piano dei conti completo collegato alle voci di bilancio |
 | `dateutils.py` | date e periodi degli esercizi |
 | `icona.py` | logo e caselle di spunta incorporati (generato da `strumenti/genera_icone.py`) |
 | `strumenti/` | generazione di logo, icone e informazioni di versione dell'eseguibile, screenshot e tempi di risposta su Windows |
@@ -124,8 +132,8 @@ Su Windows c'è anche [`build.bat`](build.bat). Ogni tag `vX.Y` pubblicato su Gi
 
 ## Note e limiti
 
-- Ogni registrazione ha **un conto in Dare e uno in Avere** con lo stesso importo: una fattura con IVA detraibile si registra in due righe (imponibile e IVA). Non tiene i registri IVA, non gestisce ratei e risconti né il bilancio civilistico.
-- **Non è un software fiscale** e non corrisponde al regime di "contabilità semplificata": non produce registri obbligatori né dichiarazioni.
+- Il modulo IVA non gestisce pro-rata generale, IVA per cassa, ventilazione dei corrispettivi, regimi speciali, split payment e plafond; il bilancio non produce nota integrativa, rendiconto finanziario né il file XBRL per il deposito.
+- **Non sostituisce il commercialista** e non fa dichiarazioni, F24 o comunicazioni: i dati vanno controllati da chi firma.
 - Gli eseguibili sono per Windows a 64 bit, Mac (Apple Silicon e Intel) e Linux a 64 bit. Su Mac l'app non è firmata da Apple, su Windows l'eseguibile non è ancora firmato (vedi [Code signing policy](https://spacefilling.github.io/contabilino/firma-del-codice/)).
 - Non sostituisce il commercialista: serve a tenere in ordine i movimenti e a passargli dati chiari.
 

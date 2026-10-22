@@ -55,7 +55,12 @@ IVA
   D.P.R. 633/1972), che si conosce solo a fine anno e non è attribuibile ai
   singoli acquisti, va nel conto "IVA indetraibile da pro-rata" tra gli oneri
   diversi di gestione (B.14).
-- RUOLI dà i conti che il modulo IVA usa per le registrazioni automatiche.
+- RUOLI dà i conti che il modulo IVA usa per le registrazioni automatiche. I nomi
+  dei tre conti IVA sono esattamente quelli che iva.py cerca quando si attiva il
+  modulo ("IVA su acquisti", "IVA su vendite", "Erario c/IVA"), così non ne crea
+  dei doppioni. iva.py crea l'Erario c/IVA di tipo PASSIVO quando manca; qui è
+  ATTIVO tra i crediti tributari: per il bilancio il tipo è indifferente, perché
+  conta il segno del saldo (VOCI_SALDO_OPPOSTO).
 
 Limiti
 ------
@@ -184,7 +189,7 @@ _conto(p, "2209", "Fondo svalutazione crediti", "SPA.C.II.1.entro", rettifica=Tr
        nota="Rettifica dei crediti verso clienti: saldo Avere.")
 
 p = _padre("2300", "Crediti tributari", "ATTIVO", "SPA.C.II.5-bis.entro")
-_conto(p, "2301", "IVA su acquisti (IVA a credito)", "SPA.C.II.5-bis.entro")
+_conto(p, "2301", "IVA su acquisti", "SPA.C.II.5-bis.entro", nota="IVA a credito delle fatture passive.")
 _conto(p, "2302", "Erario c/IVA", "SPA.C.II.5-bis.entro", saldo_opposto="SPP.D.12.entro",
        nota="Conto di liquidazione: saldo Dare = credito, saldo Avere = debito tributario.")
 _conto(p, "2303", "Erario c/acconti IRES", "SPA.C.II.5-bis.entro")
@@ -258,7 +263,7 @@ _conto(p, "4402", "Fatture da ricevere", "SPP.D.7.entro")
 _conto(p, "4403", "Acconti ricevuti da clienti", "SPP.D.6.entro")
 
 p = _padre("4500", "Debiti tributari", "PASSIVO", "SPP.D.12.entro")
-_conto(p, "4501", "IVA su vendite (IVA a debito)", "SPP.D.12.entro")
+_conto(p, "4501", "IVA su vendite", "SPP.D.12.entro", nota="IVA a debito delle fatture attive e dei corrispettivi.")
 _conto(p, "4502", "Erario c/ritenute da versare", "SPP.D.12.entro")
 _conto(p, "4503", "Erario c/IRES", "SPP.D.12.entro")
 _conto(p, "4504", "Erario c/IRAP", "SPP.D.12.entro")

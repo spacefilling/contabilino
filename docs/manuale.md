@@ -17,6 +17,8 @@ permalink: /manuale/
   <li><a href="#correggere-eliminare-o-stornare">Correggere, eliminare o stornare</a></li>
   <li><a href="#saldi-conti">Saldi conti e partitari</a></li>
   <li><a href="#report-ed-export">Report ed export</a></li>
+  <li><a href="#iva">Gestione IVA (facoltativa)</a></li>
+  <li><a href="#bilancio">Bilancio civilistico (facoltativo)</a></li>
   <li><a href="#scorciatoie-da-tastiera">Scorciatoie da tastiera</a></li>
   <li><a href="#dati-backup-e-chiavetta-usb">Dati, backup e chiavetta USB</a></li>
   <li><a href="#limiti-da-conoscere">Limiti da conoscere</a></li>
@@ -163,7 +165,13 @@ Esempi:
 | Fattura a un cliente | 300 Crediti clienti | 501 Trattoria Il Portico |
 | Incasso su banca | 110 Banca | 300 Crediti clienti |
 
-Una fattura con IVA detraibile richiede due registrazioni: l'imponibile sul conto di costo e l'IVA su un conto *IVA a credito*, entrambe in Avere su 200 Debiti fornitori.
+### Registrazione composta {#registrazione-composta}
+
+Quando un'operazione coinvolge più di due conti (stipendi, ammortamenti, una fattura con IVA registrata a mano…) usa **Registrazione composta…**, a destra sopra la riga di inserimento: data, causale e un elenco di righe, ciascuna con un conto e un importo in Dare o in Avere. Si aggiungono e si tolgono righe a piacere; in basso ci sono i totali e, finché non quadra, la differenza da sistemare. Si salva solo se il totale Dare è uguale al totale Avere.
+
+Nel giornale una registrazione composta mostra *Diversi* con i codici dei conti dal lato che ne ha più di uno; **Modifica** la riapre nella stessa finestra. Se l'esercizio contiene registrazioni composte, l'export del Libro Giornale usa il formato classico, una riga per ogni conto movimentato.
+
+Con la [Gestione IVA](#iva) attiva, fatture e corrispettivi si registrano dal menu **IVA**, che prepara da solo la scrittura con l'IVA.
 
 ## 6. Correggere, eliminare o stornare {#correggere-eliminare-o-stornare}
 
@@ -260,7 +268,104 @@ Il PDF e l'Excel riportano in alto i conti scelti. Con una selezione, Costi e Ri
 
 Se il file da sovrascrivere è aperto in Excel o in un lettore PDF, il programma non riesce a salvarlo: chiudilo e ripeti l'export.
 
-## 9. Scorciatoie da tastiera {#scorciatoie-da-tastiera}
+## 9. Gestione IVA (facoltativa) {#iva}
+
+La gestione IVA si attiva per l'archivio da **Strumenti → Moduli…**: finché è spenta il programma funziona come prima, e spegnendola non si perde nulla. All'attivazione vengono creati, se mancano, i registri *V – vendite*, *A – acquisti* e *C – corrispettivi*, le aliquote (22, 10, 5, 4% e le principali nature di operazioni senza imposta) e i conti *IVA su acquisti*, *IVA su vendite* ed *Erario c/IVA*: nulla di ciò che esiste già viene cambiato.
+
+### Impostazioni
+
+**IVA → Impostazioni IVA…** ha quattro schede:
+
+- **Generale**: liquidazione **mensile** o **trimestrale**, i conti IVA, il conto di incasso proposto per i corrispettivi e il registro vendite in cui si integra l'IVA del reverse charge;
+- **Registri**: i registri sezionali, uno o più per tipo (es. vendite Italia e vendite estero), con codice e descrizione; un registro si può disattivare;
+- **Aliquote**: percentuale e, per le operazioni senza imposta, la natura (N1…N7);
+- **Azienda**: ragione sociale, partita IVA, codice fiscale e sede, stampati nell'intestazione dei registri.
+
+### Fatture, note di credito e corrispettivi
+
+Dal menu **IVA** si registrano fattura di acquisto, nota di credito ricevuta, fattura di vendita, nota di credito emessa e corrispettivi. Nella finestra si indicano registro, data di registrazione, data e numero del documento, fornitore o cliente (un conto, per esempio un sottoconto di 200 o di 300) e le righe: conto di costo o di ricavo, imponibile, aliquota e imposta, calcolata in automatico ma modificabile per farla coincidere con il documento. In basso c'è l'anteprima della **scrittura contabile** che verrà registrata.
+
+- **IVA indetraibile** (acquisti): per ogni riga la *% detraibile*; la parte indetraibile dell'imposta va sul conto di costo.
+- **Reverse charge** (acquisti): l'IVA viene registrata sia nel registro acquisti (per la parte detraibile) sia nel registro vendite come integrazione, e al fornitore va solo l'imponibile.
+- **Note di credito**: scrittura opposta alla fattura, importi negativi nei registri e nella liquidazione.
+- **Corrispettivi**: si inseriscono i totali **lordi** della giornata per aliquota; il programma scorpora imponibile e imposta e registra l'incasso sul conto scelto (cassa o banca).
+
+Il **protocollo** è progressivo per registro e per anno solare. Un documento si corregge con **Modifica** dal giornale (il protocollo resta lo stesso); per annullarlo si registra una nota di credito: lo storno non è ammesso perché non aggiornerebbe i registri.
+
+### Registri IVA
+
+**IVA → Registri IVA…**: si sceglie il registro e il periodo (mese, trimestre o anno) e si vedono i documenti in ordine di protocollo. **Stampa PDF**, **Excel** e **CSV** producono il registro con il riepilogo per aliquota e le pagine numerate per anno (es. *Pagina 2026/3*).
+
+### Liquidazione
+
+**IVA → Liquidazione IVA…**: per il mese o il trimestre scelto mostra l'IVA a debito (vendite e corrispettivi) e l'IVA detraibile (acquisti) per registro, il credito del periodo precedente, gli interessi dell'1% per chi liquida ogni trimestre, l'acconto versato e il risultato. Un debito sotto **25,82 €** non si versa e si somma al periodo successivo.
+
+- **Salva liquidazione** memorizza il risultato, che diventa il punto di partenza del periodo dopo (per il primo periodo dell'anno il credito dell'anno precedente si indica a mano);
+- **Registra giroconto** chiude *IVA su vendite* e *IVA su acquisti* su *Erario c/IVA* all'ultimo giorno del periodo; il versamento F24 si registra poi a parte (*Erario c/IVA* a *Banca*);
+- **Stampa PDF** ed **Excel** producono il prospetto della liquidazione.
+
+Se registri o modifichi un documento in un periodo già liquidato, il programma lo segnala: la liquidazione va ricalcolata.
+
+## 10. Bilancio civilistico (facoltativo) {#bilancio}
+
+Il bilancio si attiva da **Strumenti → Moduli…** e produce stato patrimoniale e conto economico negli schemi del Codice civile:
+
+- **ordinario**, artt. 2424 e 2425;
+- **abbreviato**, art. 2435-bis;
+- **micro-imprese**, art. 2435-ter (stessi schemi dell'abbreviato; segnala le voci dei derivati, che le micro-imprese non usano).
+
+La forma da adottare dipende dai limiti di legge (attivo, ricavi, dipendenti): la sceglie chi redige il bilancio.
+
+### Collegare i conti alle voci
+
+Ogni conto va collegato a una voce dello schema **ordinario**; abbreviato e micro-imprese si ricavano da solo. Da **Bilancio → Collega i conti alle voci di bilancio…** si sceglie per ogni conto:
+
+- la **voce** (per i crediti e i debiti con la quota *entro* od *oltre* l'esercizio successivo);
+- facoltativa, la voce da usare se il **saldo è dalla parte opposta**: per esempio la banca in rosso va tra i *debiti verso banche*, un cliente con saldo Avere tra gli *acconti*;
+- se è un **conto di rettifica**, come un fondo ammortamento: il suo saldo riduce la voce del bene.
+
+Un sottoconto senza voce usa quella del suo conto padre: per esempio collegando *500 Ricavi* a *A.1 ricavi delle vendite e delle prestazioni* tutti i clienti sotto 500 sono già a posto. **Proponi le voci dei conti non collegati** suggerisce le voci dai nomi dei conti (Cassa, Banca, Fornitori, Affitti…): le proposte si vedono in arancione e si applicano solo confermando.
+
+Il collegamento è **facoltativo** e si può fare anche solo in parte: chi non usa il bilancio civilistico non deve cambiare nulla. Gli archivi creati con il **piano dei conti completo** hanno già tutti i conti collegati.
+
+### Il bilancio d'esercizio
+
+**Bilancio → Bilancio d'esercizio…**: si sceglie l'esercizio e lo schema. Il programma mostra stato patrimoniale e conto economico, con il **confronto con l'esercizio precedente** (art. 2423-ter) e, a scelta, le voci a zero e gli importi all'unità di euro (art. 2423, con la differenza nella riserva da arrotondamento). L'utile o la perdita dell'esercizio passa dal conto economico al patrimonio netto (A.IX).
+
+Sotto il prospetto ci sono i **controlli**:
+
+- attivo uguale a passivo;
+- conti con saldo non collegati;
+- voci inesistenti;
+- conti di tipo incoerente con la voce;
+- saldi dalla parte opposta;
+- scritture di chiusura già registrate.
+
+**Stampa PDF**, **Excel** e **CSV** producono il prospetto.
+
+![Bilancio in forma abbreviata con i controlli]({{ '/assets/schermate/11-bilancio.png' | relative_url }}){: .esempio}
+
+### Quando calcolarlo
+
+Il bilancio si calcola sui saldi così come sono: prima vanno registrate le **scritture di assestamento** (ammortamenti, ratei e risconti, rimanenze finali, TFR, imposte) e **non** le scritture di chiusura (l'epilogo dei costi e dei ricavi): il programma le riconosce e lo segnala. Nota integrativa, rendiconto finanziario e relazione sulla gestione non sono prodotti; il deposito in formato XBRL si fa con gli strumenti della Camera di commercio o del commercialista.
+
+### Piano dei conti completo
+
+Creando un archivio nuovo si può scegliere il **piano dei conti completo**: circa 200 conti per una piccola società o ditta, con codici a quattro cifre per classe:
+
+| Classe | Contenuto |
+| --- | --- |
+| 1 | immobilizzazioni |
+| 2 | attivo circolante |
+| 3 | patrimonio netto |
+| 4 | debiti e fondi |
+| 5 | ricavi |
+| 6 | costi |
+| 7 | imposte |
+
+I conti sono già collegati alle voci di bilancio, e IVA e bilancio sono attivati. Si possono modificare, aggiungere e togliere come gli altri. Chi usa già Contabilino non è obbligato a cambiare piano.
+
+## 11. Scorciatoie da tastiera {#scorciatoie-da-tastiera}
 
 | Tasto | Dove | Azione |
 | --- | --- | --- |
@@ -272,7 +377,7 @@ Se il file da sovrascrivere è aperto in Excel o in un lettore PDF, il programma
 | Tasto destro | tabella | menu con Modifica, Elimina, Storno |
 | <kbd>↑</kbd> <kbd>↓</kbd> | autocompletamento | scorre l'elenco dei suggerimenti |
 
-## 10. Dati, backup e chiavetta USB {#dati-backup-e-chiavetta-usb}
+## 12. Dati, backup e chiavetta USB {#dati-backup-e-chiavetta-usb}
 
 Contabilino è **portabile**: non si installa, non scrive nel registro di Windows né in altre cartelle, e tutti i dati stanno in un solo file `.db` (SQLite) accanto al programma. Per toglierlo basta cancellare la cartella.
 
@@ -288,17 +393,17 @@ E:\
 
 All'avvio il programma apre da solo il `contabilino.db` che si trova nella sua cartella.
 
-## 11. Limiti da conoscere {#limiti-da-conoscere}
+## 13. Limiti da conoscere {#limiti-da-conoscere}
 
 Contabilino tiene una contabilità in partita doppia essenziale. Alcune cose non le fa, e conviene saperlo:
 
 - **Riporto dei saldi, non chiusura dei conti.** Il [riporto](#riporto-dei-saldi) registra i saldi di apertura nel nuovo esercizio, ma il programma non fa le scritture di chiusura dell'esercizio precedente né la destinazione dell'utile: il risultato confluisce nel patrimonio netto.
 - **Il segno dei saldi.** Nella scheda Saldi Conti e nel suo export il saldo è sempre Dare − Avere: per i conti di passivo e di ricavo un saldo "normale" è quindi negativo. Il report Costi e Ricavi invece mostra costi e ricavi entrambi in positivo.
 - **Fornitori e clienti come costi e ricavi.** Se sono sottoconti di 400 e 500, il loro partitario elenca le fatture ma non i pagamenti: per lo scadenzario servono i sottoconti sotto 200 e 300 (vedi [Piano dei conti](#piano-dei-conti)).
-- **IVA.** Ogni registrazione ha un conto in Dare e uno in Avere: una fattura con IVA detraibile si registra in due righe, l'imponibile sul conto di costo e l'IVA su un conto "IVA a credito" (da creare, di tipo ATTIVO). Registrando il totale sul costo, i costi risultano più alti. Contabilino non tiene i registri IVA.
-- **Non è un software fiscale.** Non produce registri obbligatori, dichiarazioni o bilancio civilistico e non sostituisce il commercialista: serve a tenere in ordine i movimenti e a passargli dati chiari.
+- **IVA.** Senza il modulo IVA una fattura con IVA si registra con una [registrazione composta](#registrazione-composta) (costo, IVA a credito, fornitore). Il modulo IVA non gestisce pro-rata generale, IVA per cassa, ventilazione dei corrispettivi, regimi speciali (agricoltura, margine…), split payment e plafond; la detrazione segue la data di registrazione del documento.
+- **Non sostituisce il commercialista.** Con i moduli attivi produce registri IVA, liquidazione e bilancio negli schemi del Codice civile, ma non dichiarazioni, F24, comunicazioni (LIPE), nota integrativa né il deposito XBRL: i dati vanno controllati da chi firma.
 
-## 12. Eseguire dal codice sorgente {#eseguire-dal-codice-sorgente}
+## 14. Eseguire dal codice sorgente {#eseguire-dal-codice-sorgente}
 
 Serve Python 3.10 o successivo. Tkinter è incluso in Python per Windows e macOS.
 

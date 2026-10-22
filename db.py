@@ -78,10 +78,13 @@ class Database:
         if "padre_id" not in columns:
             cursor.execute("ALTER TABLE conti ADD COLUMN padre_id INTEGER REFERENCES conti(id)")
             self.conn.commit()
-        if "voce_bilancio" not in columns:
-            # Voce dello schema di bilancio (art. 2424/2425 c.c.) a cui il conto è collegato: facoltativa
-            cursor.execute("ALTER TABLE conti ADD COLUMN voce_bilancio TEXT")
-            self.conn.commit()
+        # Collegamento facoltativo del conto al bilancio civilistico (modulo bilancio):
+        # voce dello schema ordinario, voce per il saldo opposto, conto di rettifica
+        for colonna, tipo in (("voce_bilancio", "TEXT"), ("voce_bilancio_opposta", "TEXT"),
+                              ("rettifica", "INTEGER NOT NULL DEFAULT 0")):
+            if colonna not in columns:
+                cursor.execute(f"ALTER TABLE conti ADD COLUMN {colonna} {tipo}")
+                self.conn.commit()
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS impostazioni (chiave TEXT PRIMARY KEY, valore TEXT)"
         )
@@ -217,10 +220,48 @@ class Database:
             )
             self.conn.commit()
 
-    def init_db(self):
-        """Inizializza un nuovo database con tabelle e conti predefiniti."""
+    def init_db(self, piano="semplice"):
+        """
+        Inizializza un nuovo archivio. piano="semplice": i 6 conti di sempre;
+        piano="completo": il piano dei conti di base (piano_base) già collegato alle
+        voci del bilancio civilistico, con i moduli IVA e bilancio attivati.
+        """
         self.create_tables()
-        self.insert_default_conti()
+        if piano != "completo":
+            self.insert_default_conti()
+            return
+        import piano_base
+        from iva import ModuloIva
+        piano_base.crea_piano(self)
+        for conto in self.get_conti():
+            codice = conto["codice"]
+            if codice in piano_base.MAPPA or codice in piano_base.RETTIFICHE:
+                self.set_collegamento_bilancio(
+                    conto["id"], piano_base.MAPPA.get(codice),
+                    piano_base.VOCI_SALDO_OPPOSTO.get(codice), codice in piano_base.RETTIFICHE)
+        self.imposta_modulo("iva", True)
+        self.imposta_modulo("bilancio", True)
+        ModuloIva(self).prepara()  # registri e aliquote; i conti IVA del piano vengono riconosciuti per nome
+
+    # --- Collegamento dei conti al bilancio civilistico ---
+
+    def set_collegamento_bilancio(self, conto_id, voce, voce_opposta=None, rettifica=False):
+        with self.conn:
+            self.conn.execute(
+                "UPDATE conti SET voce_bilancio = ?, voce_bilancio_opposta = ?, rettifica = ? WHERE id = ?",
+                (voce or None, voce_opposta or None, 1 if rettifica else 0, conto_id))
+
+    def get_collegamenti_bilancio(self):
+        """(mappa codice -> voce, insieme dei codici di rettifica, mappa codice -> voce per il saldo opposto)."""
+        mappa, rettifiche, opposte = {}, set(), {}
+        for c in self.conn.execute("SELECT codice, voce_bilancio, voce_bilancio_opposta, rettifica FROM conti"):
+            if c["voce_bilancio"]:
+                mappa[c["codice"]] = c["voce_bilancio"]
+            if c["voce_bilancio_opposta"]:
+                opposte[c["codice"]] = c["voce_bilancio_opposta"]
+            if c["rettifica"]:
+                rettifiche.add(c["codice"])
+        return mappa, rettifiche, opposte
 
     # --- Esercizi ---
 

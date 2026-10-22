@@ -5,11 +5,17 @@ Programma per **Windows, Mac e Linux**: registra costi e ricavi in partita doppi
 > **Non si installa.** Un solo file da avviare; i dati stanno in un solo file (`contabilino.db`) accanto al programma. Per il backup o per passare a un altro computer basta copiare la cartella.
 
 ### 🆕 Novità di questa versione
-- **Anche per Mac e Linux**: app per Mac (Apple Silicon e Intel) ed eseguibile per Linux, portabili come quello per Windows.
-- **Finestra di benvenuto** più chiara: spiega dove stanno i dati e, se nella cartella del programma trova un archivio di Contabilino (anche con un altro nome), lo propone con numero di registrazioni e data di modifica. Poi: crea un nuovo archivio, apri un archivio da un'altra cartella, esci. Se c'è `contabilino.db` si apre subito, come prima.
-- **File → Apri archivio** controlla che il file sia davvero un archivio di Contabilino; nuovo comando **File → Mostra la cartella dell'archivio** (comodo per il backup).
-- Documentazione e sito mettono in evidenza che il programma è portabile.
-- Nessuna modifica al database: gli archivi esistenti si usano così come sono.
+**Due moduli facoltativi**, da attivare per l'archivio in *Strumenti → Moduli*. Spenti, Contabilino funziona esattamente come prima: chi lo usa già non deve cambiare nulla.
+
+- **Gestione IVA**: fatture e note di credito di acquisto e vendita, corrispettivi (con scorporo), reverse charge, IVA indetraibile. La scrittura contabile la prepara il programma. Registri IVA sezionali configurabili, stampabili per mese, trimestre o anno; liquidazione mensile o trimestrale con interessi dell'1%, credito riportato, acconto e giroconto su Erario c/IVA.
+- **Bilancio civilistico**: stato patrimoniale e conto economico negli schemi del Codice civile (ordinario, abbreviato, micro-imprese), con confronto con l'esercizio precedente, controlli e stampa. I conti si collegano alle voci di bilancio, anche solo in parte, con proposte automatiche.
+
+E inoltre:
+- **Piano dei conti completo** (circa 200 conti già collegati al bilancio) proposto quando crei un archivio nuovo; il piano semplice resta la scelta predefinita.
+- **Registrazione composta**: operazioni con più di due conti (stipendi, ammortamenti...).
+- Nessun dato esistente viene modificato: solo aggiunte, vuote finché non usi i moduli.
+
+> Contabilino aiuta a tenere in ordine contabilità, IVA e bilancio, ma non sostituisce il commercialista: non fa dichiarazioni, F24, nota integrativa né il deposito XBRL.
 
 ### ⬇️ Download
 Dalla sezione *Assets* qui sotto scarica il file per il tuo sistema:

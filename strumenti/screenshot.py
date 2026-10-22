@@ -150,7 +150,65 @@ def main():
     dialogo(lambda: dialogs.GestioneContiDialog(root, db), "07-piano-dei-conti")
     dialogo(lambda: dialogs.GestioneEserciziDialog(root, db, vecchio), "08-esercizi")
 
-    # 6. Schermo intero: barra delle applicazioni con l'icona
+    # 6. Moduli IVA e bilancio, su un archivio nuovo con il piano dei conti completo
+    import bilancio_ui
+    import iva_ui
+    from iva import ACQUISTI, FATTURA, VENDITE, ModuloIva
+    completo = Database(os.path.join(cartella, "completo.db"))
+    completo.connect()
+    completo.init_db("completo")
+    for chiave, valore in (("azienda_denominazione", "Laboratorio Esempio S.r.l."), ("azienda_partita_iva", "01234567890")):
+        completo.set_impostazione(chiave, valore)
+    es_prec = completo.crea_esercizio("Esercizio 2025", "2025-01-01", "2025-12-31")
+    es_c = completo.crea_esercizio("Esercizio 2026", "2026-01-01", "2026-12-31")
+    k = {c["codice"]: c["id"] for c in completo.get_conti()}
+    m = ModuloIva(completo)
+    al = {a["codice"]: a["id"] for a in m.get_aliquote()}
+    rg = {r["tipo"]: r["id"] for r in m.get_registri()}
+    for es, anno, fattore in ((es_prec, 2025, 0.8), (es_c, 2026, 1.0)):
+        completo.crea_registrazione(es, f"{anno}-01-02", "Versamento soci", [(k["2501"], 10000, 0), (k["3101"], 0, 10000)]) if anno == 2025 else None
+        for mese in range(1, 13):
+            d = f"{anno}-{mese:02d}-15"
+            m.registra_documento(es, rg[VENDITE], d, f"Fattura vendita {mese}", k["2201"],
+                                 [{"conto_id": k["5101"], "imponibile": round(4000 * fattore, 2), "imposta": round(880 * fattore, 2), "aliquota_id": al["22"]}])
+            m.registra_documento(es, rg[ACQUISTI], d, f"Fattura acquisto {mese}", k["4401"],
+                                 [{"conto_id": k["6101"], "imponibile": round(1500 * fattore, 2), "imposta": round(330 * fattore, 2), "aliquota_id": al["22"], "detraibile": 100}])
+            completo.crea_registrazione(es, f"{anno}-{mese:02d}-28", "Incasso clienti", [(k["2501"], round(4880 * fattore, 2), 0), (k["2201"], 0, round(4880 * fattore, 2))])
+            completo.crea_registrazione(es, f"{anno}-{mese:02d}-28", "Pagamento fornitori", [(k["4401"], round(1830 * fattore, 2), 0), (k["2501"], 0, round(1830 * fattore, 2))])
+            completo.crea_registrazione(es, f"{anno}-{mese:02d}-05", "Affitto laboratorio", [(k["6301"], 800, 0), (k["2501"], 0, 800)])
+    principale_db = w.db
+    dialogo(lambda: bilancio_ui.BilancioDialog(root, completo, es_c, esporta=lambda *a: None), "11-bilancio")
+    es_c_riga = completo.get_esercizio(es_c)
+    def fattura():
+        d = iva_ui.DocumentoIvaDialog(root, completo, es_c_riga, ACQUISTI, FATTURA)
+        d._data_reg.set_iso_date("2026-11-05")
+        d._data_doc.set_iso_date("2026-11-03")
+        d._numero.insert(0, "123/26")
+        d._controparte.set_value(next(x for x in d._conti_labels if x.startswith("4401")))
+        r = d._righe[0]
+        r["conto"].set_value(next(x for x in d._conti_labels if x.startswith("6101")))
+        r["importo"].set_amount(1000)
+        d._ricalcola(r)
+        d._aggiorna()
+        return d
+    dialogo(fattura, "12-fattura-acquisto")
+    completo.set_impostazione("iva_periodicita", "T")
+    def liquidazione():
+        d = iva_ui.LiquidazioneDialog(root, completo, esporta=lambda *a: None, aggiorna_giornale=lambda: None)
+        d._periodo.anno.set(2026)
+        d._periodo.periodo.current(2)
+        d._calcola()
+        return d
+    dialogo(liquidazione, "13-liquidazione-iva")
+    def collega():
+        d = bilancio_ui.CollegaContiDialog(root, principale_db)
+        d._proposte = {c["id"]: p for c in principale_db.get_conti() if not c["voce_bilancio"]
+                       for p in [bilancio_ui.proponi(c)] if p}
+        d._popola()
+        return d
+    dialogo(collega, "14-collega-conti")
+
+    # 7. Schermo intero: barra delle applicazioni con l'icona
     from PIL import ImageGrab
     ImageGrab.grab(all_screens=True).save(os.path.join(USCITA, "09-schermo-intero.png"))
 

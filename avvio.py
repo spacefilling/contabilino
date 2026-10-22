@@ -79,8 +79,9 @@ def descrivi(info):
 
 class FinestraAvvio:
     """
-    Benvenuto e scelta dell'archivio. Dopo mainloop(): risultato = (percorso, nuovo)
-    oppure None se l'utente esce.
+    Benvenuto e scelta dell'archivio. Dopo mainloop(): risultato = (percorso, piano)
+    dove piano è None per un archivio esistente, "semplice" o "completo" per uno
+    nuovo; None se l'utente esce.
     """
 
     def __init__(self, cartella, archivi):
@@ -178,7 +179,7 @@ class FinestraAvvio:
     def _apri_selezionato(self):
         sel = self.lista.selection()
         if sel:
-            self.risultato = (self.archivi[int(sel[0])]["percorso"], False)
+            self.risultato = (self.archivi[int(sel[0])]["percorso"], None)
             self.root.destroy()
 
     def _crea(self):
@@ -201,7 +202,10 @@ class FinestraAvvio:
                 parent=self.root,
             )
             return
-        self.risultato = (percorso, True)
+        piano = chiedi_piano(self.root)
+        if not piano:
+            return
+        self.risultato = (percorso, piano)
         self.root.destroy()
 
     def _apri_altro(self):
@@ -216,12 +220,63 @@ class FinestraAvvio:
         if not info_archivio(percorso):
             messagebox.showerror("File non valido", messaggio_non_valido(percorso), parent=self.root)
             return
-        self.risultato = (percorso, False)
+        self.risultato = (percorso, None)
         self.root.destroy()
 
     def mostra(self):
         self.root.mainloop()
         return self.risultato
+
+
+class SceltaPianoDialog(tk.Toplevel):
+    """Piano dei conti del nuovo archivio: semplice (come sempre) o completo per IVA e bilancio."""
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.result = None
+        self.title("Nuovo archivio")
+        self.resizable(False, False)
+        self.transient(parent)
+        self.grab_set()
+        f = ttk.Frame(self, padding=(px(22), px(18)))
+        f.pack(fill=tk.BOTH, expand=True)
+        ttk.Label(f, text="Con quale piano dei conti cominci?", style="Sottotitolo.TLabel").pack(anchor=tk.W)
+        self._scelta = tk.StringVar(value="semplice")
+        for valore, titolo, testo in (
+            ("semplice", "Semplice",
+             "I 6 conti di base (cassa, banca, crediti, debiti, costi, ricavi) da completare con i tuoi "
+             "sottoconti. Va bene per una contabilità essenziale, come nelle versioni precedenti."),
+            ("completo", "Completo, per IVA e bilancio civilistico",
+             "Circa 200 conti per una piccola società o ditta (immobilizzazioni e ammortamenti, IVA, "
+             "personale, imposte...), già collegati alle voci del bilancio, con la gestione IVA e il "
+             "bilancio attivati. Si possono modificare, aggiungere o togliere."),
+        ):
+            ttk.Radiobutton(f, text=titolo, value=valore, variable=self._scelta).pack(anchor=tk.W, pady=(px(12), 0))
+            ttk.Label(f, text=testo, wraplength=px(440), justify=tk.LEFT,
+                      style="Secondario.TLabel").pack(anchor=tk.W, padx=(px(26), 0))
+        ttk.Label(f, text="IVA e bilancio si possono attivare anche in seguito, da Strumenti > Moduli.",
+                  style="Nota.TLabel").pack(anchor=tk.W, pady=(px(14), 0))
+        btn = ttk.Frame(f)
+        btn.pack(fill=tk.X, pady=(px(14), 0))
+        ttk.Button(btn, text="Crea l'archivio", style="Accent.TButton", command=self._ok).pack(side=tk.RIGHT)
+        ttk.Button(btn, text="Annulla", command=self.destroy).pack(side=tk.RIGHT, padx=px(6))
+        self.bind("<Return>", lambda e: self._ok())
+        self.bind("<Escape>", lambda e: self.destroy())
+        self.update_idletasks()
+        x = parent.winfo_rootx() + (parent.winfo_width() - self.winfo_width()) // 2
+        y = parent.winfo_rooty() + (parent.winfo_height() - self.winfo_height()) // 3
+        self.geometry(f"+{max(0, x)}+{max(0, y)}")
+
+    def _ok(self):
+        self.result = self._scelta.get()
+        self.destroy()
+
+
+def chiedi_piano(parent):
+    """ "semplice", "completo" oppure None se l'utente annulla."""
+    dlg = SceltaPianoDialog(parent)
+    parent.wait_window(dlg)
+    return dlg.result
 
 
 def messaggio_non_valido(percorso):
@@ -231,10 +286,11 @@ def messaggio_non_valido(percorso):
 
 def scegli_archivio(cartella):
     """
-    Archivio da aprire all'avvio: (percorso, nuovo), oppure None se l'utente esce.
+    Archivio da aprire all'avvio: (percorso, piano) con piano None per un archivio
+    esistente e "semplice"/"completo" per uno nuovo; None se l'utente esce.
     Se nella cartella c'è contabilino.db, lo apre subito (l'uso di tutti i giorni).
     """
     predefinito = os.path.join(cartella, NOME_PREDEFINITO)
     if os.path.exists(predefinito) and info_archivio(predefinito):
-        return predefinito, False
+        return predefinito, None
     return FinestraAvvio(cartella, archivi_nella_cartella(cartella)).mostra()

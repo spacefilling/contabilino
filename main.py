@@ -64,13 +64,13 @@ def main():
     scelta = scegli_archivio(cartella)
     if not scelta:
         sys.exit(0)
-    db_path, is_new = scelta
+    db_path, piano = scelta
 
     db = Database(db_path)
     db.connect()
 
-    if is_new:
-        db.init_db()
+    if piano:
+        db.init_db(piano)
     else:
         db.create_tables()
 

@@ -12,6 +12,7 @@ import tkinter as tk
 import webbrowser
 from tkinter import ttk, messagebox, filedialog
 from datetime import date
+from bilancio_ui import BilancioDialog, CollegaContiDialog
 from iva import ACQUISTI, CORRISPETTIVI, DOC_CORRISPETTIVI, FATTURA, NOTA_CREDITO, VENDITE
 from iva_ui import (
     DocumentoIvaDialog,
@@ -30,7 +31,7 @@ from dialogs import (
     StornoDialog,
 )
 import tema
-from avvio import info_archivio, messaggio_non_valido
+from avvio import chiedi_piano, info_archivio, messaggio_non_valido
 from tema import px
 from widgets import SmartDateEntry, AmountEntry, AutocompleteEntry, format_importo
 from export import FORMATI, SEGNO_SALDO, conti_economici, crea_report, movimenti_partitario, salva_report
@@ -811,7 +812,9 @@ class MainWindow:
                 "(Per usare un archivio esistente scegli File > Apri archivio.)",
             )
             return
-        self._switch_db(filepath, new=True)
+        piano = chiedi_piano(self.root)
+        if piano:
+            self._switch_db(filepath, new=True, piano=piano)
 
     def _on_apri_db(self):
         filepath = filedialog.askopenfilename(
@@ -839,13 +842,13 @@ class MainWindow:
         except OSError:
             messagebox.showinfo("Cartella dell'archivio", cartella)
 
-    def _switch_db(self, filepath, new=False):
+    def _switch_db(self, filepath, new=False, piano="semplice"):
         self.db.close()
         self.db.db_path = filepath
         self.db.backup_path = None
         self.db.connect()
         if new:
-            self.db.init_db()
+            self.db.init_db(piano)
         else:
             self.db.create_tables()
         if self.db.backup_path:
@@ -980,10 +983,14 @@ class MainWindow:
         self._refresh_conti_cache()
 
     def _on_collega_bilancio(self):
-        messagebox.showinfo("Bilancio", "Funzione in preparazione.")
+        dlg = CollegaContiDialog(self.root, self.db)
+        self.root.wait_window(dlg)
 
     def _on_bilancio(self):
-        messagebox.showinfo("Bilancio", "Funzione in preparazione.")
+        if not self.db.get_esercizi():
+            messagebox.showwarning("Attenzione", "Crea prima un esercizio.")
+            return
+        BilancioDialog(self.root, self.db, self.esercizio_id, esporta=self._esporta_da_finestra)
 
     def _esporta_da_finestra(self, report, nome_file, formato):
         self._salva_su_file(report, nome_file, formato, parent=self.root.focus_get().winfo_toplevel()

@@ -16,7 +16,7 @@ faq:
   - q: 'Posso esportare solo alcuni clienti o fornitori?'
     a: 'Sì. Per Saldi Conti, Costi e Ricavi e Partitari scegli tutti i conti oppure solo quelli spuntati in un elenco: uno per uno, per intervallo di codici (es. da 401 a 449) o cercandoli per nome.'
   - q: 'Gestisce l''IVA e il bilancio?'
-    a: 'No. Contabilino tiene una contabilità in partita doppia essenziale: registrazioni con un conto in Dare e uno in Avere, saldi, costi e ricavi, partitari. Una fattura con IVA si registra in due righe (imponibile e IVA), ma il programma non tiene i registri IVA e non fa il bilancio civilistico. Non è un software fiscale e non corrisponde al regime di "contabilità semplificata".'
+    a: 'Sì, con due moduli facoltativi da attivare in Strumenti → Moduli: gestione IVA (fatture, note di credito, corrispettivi, reverse charge, registri IVA stampabili, liquidazione mensile o trimestrale) e bilancio civilistico negli schemi del Codice civile (ordinario, abbreviato, micro-imprese). Spenti, il programma funziona come la contabilità essenziale di sempre. Non fa dichiarazioni, F24, nota integrativa né il deposito XBRL.'
   - q: 'Funziona su Mac o Linux?'
     a: 'Sì. Oltre a Windows ci sono l''app per Mac (Apple Silicon e Intel) e l''eseguibile per Linux, anche loro senza installazione e con i dati in un solo file accanto al programma. Su Mac l''app non è firmata da Apple: la prima volta si apre con clic destro → Apri.'
 ---
@@ -51,6 +51,7 @@ Contabilino è un piccolo programma per chi deve tenere una contabilità in **pa
 - **Costi e ricavi** con totali per gruppo e risultato dell'esercizio.
 - **Partitari** di qualsiasi conto (clienti, fornitori, banca, costi, ricavi) con saldo progressivo, da consultare in una scheda e da esportare.
 - **Export in CSV, Excel e PDF**, per tutti i conti o solo per quelli scelti.
+- Facoltativi: **gestione IVA** con registri e liquidazione, e **bilancio civilistico** negli schemi del Codice civile.
 
 ## Schermate
 

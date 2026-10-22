@@ -559,6 +559,51 @@ def report_liquidazione_iva(db, liq):
     )
 
 
+# --- Bilancio civilistico (modulo bilancio) ---
+
+def report_bilancio(db, bilancio, schema, esercizio, esercizio_precedente=None, voci_nulle=False):
+    """
+    Stato patrimoniale e conto economico nello schema scelto ("ordinario",
+    "abbreviato" o "micro") dal risultato di bilancio.calcola_bilancio, con la
+    colonna dell'esercizio precedente se calcolata.
+    """
+    from bilancio import senza_voci_nulle
+    from bilancio_schemi import NOMI_SCHEMI
+    prospetto = getattr(bilancio, schema)
+    con_precedente = prospetto.valori_precedenti is not None
+
+    def righe(elenco):
+        if not voci_nulle:
+            elenco = senza_voci_nulle(elenco)
+        risultato = []
+        for r in elenco:
+            forte = r.genere in ("INTESTAZIONE", "TOTALE", "RISULTATO")
+            valori = [r.etichetta, r.importo]
+            if con_precedente:
+                valori.append(r.importo_precedente)
+            risultato.append(Riga(valori, grassetto=forte, rientro=r.livello))
+        return risultato
+
+    nome_corrente = esercizio["descrizione"]
+    colonne = [Colonna("Voce", "testo", 70), Colonna(nome_corrente, "importo", 16)]
+    if con_precedente:
+        colonne.append(Colonna(esercizio_precedente["descrizione"] if esercizio_precedente else "Precedente",
+                               "importo", 16))
+    azienda = intestazione_azienda(db)
+    return Report(
+        titolo=NOMI_SCHEMI.get(schema, schema),
+        sottotitolo=f"{esercizio['descrizione']}  ({periodo_label(esercizio['data_inizio'], esercizio['data_fine'])})"
+                    + (f"  -  {azienda}" if azienda else ""),
+        colonne=colonne,
+        sezioni=[Sezione(righe(prospetto.stato_patrimoniale), titolo="Stato patrimoniale"),
+                 Sezione(righe(prospetto.conto_economico), titolo="Conto economico")],
+        colonna_nome=0,
+        note="Importi in euro." + ("" if voci_nulle else " Le voci con importo nullo in entrambi gli esercizi "
+                                                       "non sono riportate."),
+        nome_foglio="Bilancio",
+    )
+
+
 REPORT = {
     "giornale": report_giornale,
     "saldi": report_saldi,
