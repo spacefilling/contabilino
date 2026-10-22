@@ -285,6 +285,8 @@ La gestione IVA si attiva per l'archivio da **Strumenti → Moduli…**: finché
 
 Dal menu **IVA** si registrano fattura di acquisto, nota di credito ricevuta, fattura di vendita, nota di credito emessa e corrispettivi. Nella finestra si indicano registro, data di registrazione, data e numero del documento, fornitore o cliente (un conto, per esempio un sottoconto di 200 o di 300) e le righe: conto di costo o di ricavo, imponibile, aliquota e imposta, calcolata in automatico ma modificabile per farla coincidere con il documento. In basso c'è l'anteprima della **scrittura contabile** che verrà registrata.
 
+![Fattura di acquisto con l'anteprima della scrittura contabile]({{ '/assets/schermate/12-fattura-acquisto.png' | relative_url }}){: .esempio}
+
 - **IVA indetraibile** (acquisti): per ogni riga la *% detraibile*; la parte indetraibile dell'imposta va sul conto di costo.
 - **Reverse charge** (acquisti): l'IVA viene registrata sia nel registro acquisti (per la parte detraibile) sia nel registro vendite come integrazione, e al fornitore va solo l'imponibile.
 - **Note di credito**: scrittura opposta alla fattura, importi negativi nei registri e nella liquidazione.
@@ -303,6 +305,8 @@ Il **protocollo** è progressivo per registro e per anno solare. Un documento si
 - **Salva liquidazione** memorizza il risultato, che diventa il punto di partenza del periodo dopo (per il primo periodo dell'anno il credito dell'anno precedente si indica a mano);
 - **Registra giroconto** chiude *IVA su vendite* e *IVA su acquisti* su *Erario c/IVA* all'ultimo giorno del periodo; il versamento F24 si registra poi a parte (*Erario c/IVA* a *Banca*);
 - **Stampa PDF** ed **Excel** producono il prospetto della liquidazione.
+
+![Liquidazione IVA trimestrale]({{ '/assets/schermate/13-liquidazione-iva.png' | relative_url }}){: .esempio width="520"}
 
 Se registri o modifichi un documento in un periodo già liquidato, il programma lo segnala: la liquidazione va ricalcolata.
 
@@ -325,6 +329,8 @@ Ogni conto va collegato a una voce dello schema **ordinario**; abbreviato e micr
 - se è un **conto di rettifica**, come un fondo ammortamento: il suo saldo riduce la voce del bene.
 
 Un sottoconto senza voce usa quella del suo conto padre: per esempio collegando *500 Ricavi* a *A.1 ricavi delle vendite e delle prestazioni* tutti i clienti sotto 500 sono già a posto. **Proponi le voci dei conti non collegati** suggerisce le voci dai nomi dei conti (Cassa, Banca, Fornitori, Affitti…): le proposte si vedono in arancione e si applicano solo confermando.
+
+![Collegamento dei conti alle voci di bilancio con le proposte]({{ '/assets/schermate/14-collega-conti.png' | relative_url }}){: .esempio}
 
 Il collegamento è **facoltativo** e si può fare anche solo in parte: chi non usa il bilancio civilistico non deve cambiare nulla. Gli archivi creati con il **piano dei conti completo** hanno già tutti i conti collegati.
 
