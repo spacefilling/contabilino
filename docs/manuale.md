@@ -30,10 +30,22 @@ Scarica [`Contabilino.exe`]({{ site.download_url }}) dall'[ultima release]({{ si
 
 Al primo avvio Windows può mostrare l'avviso *"Windows ha protetto il PC"*: l'eseguibile non è firmato digitalmente. Clicca **Ulteriori informazioni → Esegui comunque**. Capita solo la prima volta.
 
+### Mac {#avvio-mac}
+
+Scarica lo zip per il tuo Mac (*Apple Silicon* per M1 e successivi, *Intel* per i Mac precedenti), aprilo e trascina **`Contabilino.app` nella cartella dove vuoi tenere i dati** (Documenti, una cartella apposta o una chiavetta): l'archivio `contabilino.db` starà accanto all'app.
+
+L'app non è firmata da Apple, quindi la prima volta macOS la blocca: fai **clic destro sull'app → Apri → Apri**, oppure apri **Impostazioni di Sistema → Privacy e sicurezza** e scegli **Apri comunque**. Se l'avvii direttamente dallo zip o dalla cartella Download, macOS può eseguirla da una posizione temporanea dove non si possono salvare dati: Contabilino lo segnala e chiede di spostare l'app.
+
+### Linux {#avvio-linux}
+
+Scarica `Contabilino-linux.tar.gz`, estrailo nella cartella dove vuoi tenere i dati e avvia `Contabilino` con un doppio clic o dal terminale (`./Contabilino`). Serve una distribuzione con glibc 2.35 o successiva (Ubuntu 22.04 e seguenti, Debian 12, Fedora 36…).
+
 All'avvio il programma cerca l'archivio nella sua cartella:
 
 - se c'è `contabilino.db`, lo apre subito (è il caso di tutti i giorni);
 - altrimenti mostra la **finestra di benvenuto**. Se nella cartella trova archivi di Contabilino con un altro nome, li elenca con il numero di registrazioni e la data di modifica e propone di aprire il più recente. Poi ci sono **Crea un nuovo archivio**, **Apri un archivio da un'altra cartella…** ed **Esci**.
+
+![Finestra di benvenuto che propone l'archivio trovato nella cartella]({{ '/assets/schermate/00-benvenuto.png' | relative_url }}){: .esempio width="440"}
 
 Altri archivi si aprono o si creano da **File → Apri archivio…** e **File → Nuovo archivio…**; **File → Mostra la cartella dell'archivio** apre la cartella del file (comodo per il backup). Un file che non è un archivio di Contabilino non viene aperto.
 

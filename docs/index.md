@@ -18,12 +18,12 @@ faq:
   - q: 'Gestisce l''IVA e il bilancio?'
     a: 'No. Contabilino tiene una contabilità in partita doppia essenziale: registrazioni con un conto in Dare e uno in Avere, saldi, costi e ricavi, partitari. Una fattura con IVA si registra in due righe (imponibile e IVA), ma il programma non tiene i registri IVA e non fa il bilancio civilistico. Non è un software fiscale e non corrisponde al regime di "contabilità semplificata".'
   - q: 'Funziona su Mac o Linux?'
-    a: 'L''eseguibile pronto è per Windows. Dal codice sorgente, con Python, Contabilino funziona anche su macOS e Linux.'
+    a: 'Sì. Oltre a Windows ci sono l''app per Mac (Apple Silicon e Intel) e l''eseguibile per Linux, anche loro senza installazione e con i dati in un solo file accanto al programma. Su Mac l''app non è firmata da Apple: la prima volta si apre con clic destro → Apri.'
 ---
 
 # Contabilino
 
-<p class="lead">Contabilità in partita doppia per piccole attività, su Windows. Registri costi e ricavi da tastiera, tieni i conti di clienti e fornitori e ottieni report pronti da stampare o da mandare al commercialista.</p>
+<p class="lead">Contabilità in partita doppia per piccole attività, su Windows, Mac e Linux. Registri costi e ricavi da tastiera, tieni i conti di clienti e fornitori e ottieni report pronti da stampare o da mandare al commercialista.</p>
 
 {% include download.html %}
 

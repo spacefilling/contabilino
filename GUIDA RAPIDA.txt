@@ -9,6 +9,10 @@
    Per spostare tutto su un altro computer o su una chiavetta basta
    copiare la cartella.
 
+   Su Mac: estrai Contabilino.app dallo zip e spostala nella cartella
+   dove vuoi tenere i dati; la prima volta aprila con clic destro > Apri.
+   Su Linux: estrai l'archivio e avvia ./Contabilino
+
 
 2) IL PRIMO AVVIO: AVVISO DI WINDOWS (NORMALE)
    La prima volta Windows potrebbe mostrare una finestra blu:

@@ -3,9 +3,11 @@
 [![Versione](https://img.shields.io/github/v/release/spacefilling/contabilino?label=versione)](https://github.com/spacefilling/contabilino/releases/latest)
 [![Licenza: GPL v3](https://img.shields.io/badge/licenza-GPLv3-blue.svg)](LICENSE)
 ![Windows](https://img.shields.io/badge/Windows-.exe%20portabile-0078d4)
+![macOS](https://img.shields.io/badge/macOS-app-555555)
+![Linux](https://img.shields.io/badge/Linux-eseguibile-f5b800)
 ![Python](https://img.shields.io/badge/Python-Tkinter%20%2B%20SQLite-3776ab)
 
-**Registra costi e ricavi in partita doppia senza un gestionale.** Contabilino è un programma gratuito e open source (GPL-3.0) per Windows, pensato per piccole attività, associazioni e professionisti che tengono una contabilità essenziale: libro giornale, piano dei conti con clienti e fornitori, esercizi contabili con riporto dei saldi, costi e ricavi, partitari, export in CSV, Excel e PDF.
+**Registra costi e ricavi in partita doppia senza un gestionale.** Contabilino è un programma gratuito e open source (GPL-3.0) per Windows, Mac e Linux, pensato per piccole attività, associazioni e professionisti che tengono una contabilità essenziale: libro giornale, piano dei conti con clienti e fornitori, esercizi contabili con riporto dei saldi, costi e ricavi, partitari, export in CSV, Excel e PDF.
 
 > **Niente installazione, tutto in una cartella.**
 > - **Non si installa**: è un unico file, `Contabilino.exe`. Lo copi in una cartella (anche su una chiavetta USB) e lo avvii con un doppio clic. Non serve Python, non serve essere amministratori.
@@ -15,7 +17,7 @@
 
 **Sito e manuale:** [spacefilling.github.io/contabilino](https://spacefilling.github.io/contabilino/) · [Manuale](https://spacefilling.github.io/contabilino/manuale/)
 
-**Download:** [Contabilino.exe (ultima versione)](https://github.com/spacefilling/contabilino/releases/latest/download/Contabilino.exe) · [Code signing policy](https://spacefilling.github.io/contabilino/firma-del-codice/)
+**Download (ultima versione):** [Windows](https://github.com/spacefilling/contabilino/releases/latest/download/Contabilino.exe) · [Mac Apple Silicon](https://github.com/spacefilling/contabilino/releases/latest/download/Contabilino-mac-apple-silicon.zip) · [Mac Intel](https://github.com/spacefilling/contabilino/releases/latest/download/Contabilino-mac-intel.zip) · [Linux](https://github.com/spacefilling/contabilino/releases/latest/download/Contabilino-linux.tar.gz) · [Code signing policy](https://spacefilling.github.io/contabilino/firma-del-codice/)
 
 ![Contabilino su Windows 11: libro giornale con la riga di inserimento rapido](docs/assets/schermate/01-libro-giornale.png)
 
@@ -42,6 +44,14 @@ Nessuna installazione: si scarica un file e si avvia.
 2. Mettilo in una cartella (anche su una chiavetta USB) e fai doppio clic.
 3. Al primo avvio Windows può mostrare l'avviso *"Windows ha protetto il PC"*: l'eseguibile non è firmato digitalmente. Clicca **Ulteriori informazioni → Esegui comunque**.
 4. Nella finestra di benvenuto scegli **Crea un nuovo archivio**: il file `contabilino.db` nasce nella stessa cartella e ai successivi avvii si apre da solo. Se nella cartella c'è già un archivio di Contabilino (anche con un altro nome), la finestra lo propone.
+
+### Mac
+
+Scarica lo zip per il tuo Mac ([Apple Silicon](https://github.com/spacefilling/contabilino/releases/latest/download/Contabilino-mac-apple-silicon.zip): M1 e successivi; [Intel](https://github.com/spacefilling/contabilino/releases/latest/download/Contabilino-mac-intel.zip)), aprilo e **trascina `Contabilino.app` nella cartella dove vuoi tenere i dati** (anche una chiavetta). L'app non è firmata da Apple: la prima volta macOS la blocca. Clic destro sull'app → **Apri** → **Apri**, oppure Impostazioni di Sistema → Privacy e sicurezza → **Apri comunque**. L'archivio `contabilino.db` sta accanto a `Contabilino.app`.
+
+### Linux
+
+Scarica [`Contabilino-linux.tar.gz`](https://github.com/spacefilling/contabilino/releases/latest/download/Contabilino-linux.tar.gz), estrailo in una cartella e avvia `./Contabilino` (doppio clic o dal terminale). Funziona sulle distribuzioni con glibc 2.35 o successiva (es. Ubuntu 22.04 e seguenti, Debian 12, Fedora 36). L'archivio sta accanto all'eseguibile.
 
 Per provarlo con dati inventati, copia [`esempi/contabilino-esempio.db`](esempi/) accanto all'eseguibile e avvia il programma: la finestra di benvenuto lo propone.
 
@@ -116,7 +126,7 @@ Su Windows c'è anche [`build.bat`](build.bat). Ogni tag `vX.Y` pubblicato su Gi
 
 - Ogni registrazione ha **un conto in Dare e uno in Avere** con lo stesso importo: una fattura con IVA detraibile si registra in due righe (imponibile e IVA). Non tiene i registri IVA, non gestisce ratei e risconti né il bilancio civilistico.
 - **Non è un software fiscale** e non corrisponde al regime di "contabilità semplificata": non produce registri obbligatori né dichiarazioni.
-- L'eseguibile è per Windows a 64 bit. Dal codice sorgente funziona anche su macOS e Linux.
+- Gli eseguibili sono per Windows a 64 bit, Mac (Apple Silicon e Intel) e Linux a 64 bit. Su Mac l'app non è firmata da Apple, su Windows l'eseguibile non è ancora firmato (vedi [Code signing policy](https://spacefilling.github.io/contabilino/firma-del-codice/)).
 - Non sostituisce il commercialista: serve a tenere in ordine i movimenti e a passargli dati chiari.
 
 ## Contribuire
