@@ -9,6 +9,7 @@ modificarli: li apre in sola lettura solo per leggerne il riepilogo.
 import glob
 import os
 import sqlite3
+import sys
 import tkinter as tk
 from datetime import datetime
 from tkinter import filedialog, messagebox, ttk
@@ -116,9 +117,10 @@ class FinestraAvvio:
                   style="Secondario.TLabel").pack(anchor=tk.W)
 
         # Come funziona: niente installazione, dati in un solo file
+        programma = {"win32": "in questo file .exe", "darwin": "in questa app"}.get(sys.platform, "in questo file")
         ttk.Label(
             frame, wraplength=px(520), justify=tk.LEFT, style="Nota.TLabel",
-            text="Contabilino non si installa: è tutto in questo file .exe. I dati stanno in un "
+            text=f"Contabilino non si installa: è tutto {programma}. I dati stanno in un "
                  "unico archivio, un file .db: tienilo nella stessa cartella del programma, anche "
                  "su una chiavetta USB. Per fare il backup o portare tutto su un altro computer "
                  "basta copiare la cartella.",
