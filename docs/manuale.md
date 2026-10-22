@@ -9,22 +9,22 @@ permalink: /manuale/
 <nav class="toc" aria-label="Indice">
 <strong>Indice</strong>
 <ol>
-  <li><a href="#1-avvio">Avvio</a></li>
-  <li><a href="#2-primo-utilizzo">Primo utilizzo</a></li>
-  <li><a href="#3-esercizi">Esercizi</a></li>
-  <li><a href="#4-piano-dei-conti">Piano dei conti</a></li>
-  <li><a href="#5-registrare-unoperazione">Registrare un'operazione</a></li>
-  <li><a href="#6-correggere-eliminare-o-stornare">Correggere, eliminare o stornare</a></li>
-  <li><a href="#7-saldi-conti">Saldi conti</a></li>
-  <li><a href="#8-report-ed-export">Report ed export</a></li>
-  <li><a href="#9-scorciatoie-da-tastiera">Scorciatoie da tastiera</a></li>
-  <li><a href="#10-dati-backup-e-chiavetta-usb">Dati, backup e chiavetta USB</a></li>
-  <li><a href="#11-limiti-da-conoscere">Limiti da conoscere</a></li>
-  <li><a href="#12-eseguire-dal-codice-sorgente">Eseguire dal codice sorgente</a></li>
+  <li><a href="#avvio">Avvio</a></li>
+  <li><a href="#primo-utilizzo">Primo utilizzo</a></li>
+  <li><a href="#esercizi">Esercizi</a></li>
+  <li><a href="#piano-dei-conti">Piano dei conti</a></li>
+  <li><a href="#registrare-unoperazione">Registrare un'operazione</a></li>
+  <li><a href="#correggere-eliminare-o-stornare">Correggere, eliminare o stornare</a></li>
+  <li><a href="#saldi-conti">Saldi conti</a></li>
+  <li><a href="#report-ed-export">Report ed export</a></li>
+  <li><a href="#scorciatoie-da-tastiera">Scorciatoie da tastiera</a></li>
+  <li><a href="#dati-backup-e-chiavetta-usb">Dati, backup e chiavetta USB</a></li>
+  <li><a href="#limiti-da-conoscere">Limiti da conoscere</a></li>
+  <li><a href="#eseguire-dal-codice-sorgente">Eseguire dal codice sorgente</a></li>
 </ol>
 </nav>
 
-## 1. Avvio {#1-avvio}
+## 1. Avvio {#avvio}
 
 Scarica [`Contabilino.exe`]({{ site.download_url }}) dall'[ultima release]({{ site.repository_url }}/releases/latest) e mettilo in una cartella, anche su una chiavetta USB. Non c'è niente da installare.
 
@@ -39,16 +39,16 @@ Altri database si aprono o si creano da **File → Apri Database** e **File → 
 
 Quando una nuova versione cambia il formato del database, il programma lo aggiorna da solo all'apertura e prima salva una copia di sicurezza del file, avvisando dove si trova.
 
-## 2. Primo utilizzo {#2-primo-utilizzo}
+## 2. Primo utilizzo {#primo-utilizzo}
 
 1. Crea un nuovo database.
-2. Crea un esercizio da **Esercizio → Gestione Esercizi** (vedi [Esercizi](#3-esercizi)).
+2. Crea un esercizio da **Esercizio → Gestione Esercizi** (vedi [Esercizi](#esercizi)).
 3. Se serve, completa il piano dei conti da **Conti → Gestione Piano dei Conti**: ci sono già sei conti predefiniti. Aggiungi un sottoconto per ogni cliente e fornitore.
 4. Registra le operazioni nella scheda **Libro Giornale**.
 
 Per provare il programma con dati inventati, usa il database di esempio [`esempi/contabilino-esempio.db`]({{ site.repository_url }}/tree/main/esempi): copialo accanto all'eseguibile e rinominalo `contabilino.db`, oppure aprilo da **File → Apri Database**.
 
-## 3. Esercizi {#3-esercizi}
+## 3. Esercizi {#esercizi}
 
 Menu **Esercizio → Gestione Esercizi**.
 
@@ -88,7 +88,7 @@ Alla fine il patrimonio netto ha come saldo la differenza tra attività e passiv
 
 Conviene riportare i saldi quando l'esercizio precedente è completo, meglio se già chiuso: se dopo il riporto cambi le registrazioni dell'esercizio precedente, i saldi di apertura non si aggiornano da soli. Se l'esercizio contiene già delle aperture, la finestra lo segnala, perché riportando di nuovo i saldi verrebbero contati due volte.
 
-## 4. Piano dei conti {#4-piano-dei-conti}
+## 4. Piano dei conti {#piano-dei-conti}
 
 Menu **Conti → Gestione Piano dei Conti**. Conti predefiniti di un nuovo database:
 
@@ -127,7 +127,7 @@ Lasciando dei numeri liberi tra un gruppo e l'altro (es. 401–449 materie prime
 
 Un conto non si può eliminare se ha movimenti o sottoconti.
 
-## 5. Registrare un'operazione {#5-registrare-unoperazione}
+## 5. Registrare un'operazione {#registrare-unoperazione}
 
 La riga di inserimento è in fondo alla scheda **Libro Giornale**: **Data**, **Causale**, **Conto Dare**, **Conto Avere**, **Importo**. Si compila tutta da tastiera, con <kbd>Tab</kbd> per passare al campo successivo.
 
@@ -149,7 +149,7 @@ Esempi:
 
 Una fattura con IVA detraibile richiede due registrazioni: l'imponibile sul conto di costo e l'IVA su un conto *IVA a credito*, entrambe in Avere su 200 Debiti fornitori.
 
-## 6. Correggere, eliminare o stornare {#6-correggere-eliminare-o-stornare}
+## 6. Correggere, eliminare o stornare {#correggere-eliminare-o-stornare}
 
 Seleziona la registrazione nella tabella: sotto si attivano i pulsanti **Modifica**, **Elimina** e **Storno**, presenti anche nel menu del tasto destro.
 
@@ -178,11 +178,11 @@ Invece di cancellare, aggiunge una nuova registrazione con gli stessi conti inve
 
 Lo storno va nell'esercizio che contiene la data scelta, che deve essere aperto. Così si può correggere anche una registrazione di un esercizio già chiuso.
 
-## 7. Saldi conti {#7-saldi-conti}
+## 7. Saldi conti {#saldi-conti}
 
-La scheda **Saldi Conti** mostra per ogni conto il totale Dare, il totale Avere e il saldo (Dare − Avere), con i sottoconti rientrati sotto il conto padre. Il saldo ha sempre lo stesso verso: per i conti di passivo e di ricavo un saldo normale è negativo (vedi [Limiti](#11-limiti-da-conoscere)). In fondo ci sono i totali generali: il totale Dare deve essere uguale al totale Avere.
+La scheda **Saldi Conti** mostra per ogni conto il totale Dare, il totale Avere e il saldo (Dare − Avere), con i sottoconti rientrati sotto il conto padre. Il saldo ha sempre lo stesso verso: per i conti di passivo e di ricavo un saldo normale è negativo (vedi [Limiti](#limiti-da-conoscere)). In fondo ci sono i totali generali: il totale Dare deve essere uguale al totale Avere.
 
-## 8. Report ed export {#8-report-ed-export}
+## 8. Report ed export {#report-ed-export}
 
 Menu **Export**: ogni report ha un sottomenu con i tre formati, **CSV**, **Excel** e **PDF**. Gli export riguardano sempre l'esercizio attivo.
 
@@ -232,7 +232,7 @@ Il PDF e l'Excel riportano in alto i conti scelti. Con una selezione, Costi e Ri
 
 Se il file da sovrascrivere è aperto in Excel o in un lettore PDF, il programma non riesce a salvarlo: chiudilo e ripeti l'export.
 
-## 9. Scorciatoie da tastiera {#9-scorciatoie-da-tastiera}
+## 9. Scorciatoie da tastiera {#scorciatoie-da-tastiera}
 
 | Tasto | Dove | Azione |
 | --- | --- | --- |
@@ -244,7 +244,7 @@ Se il file da sovrascrivere è aperto in Excel o in un lettore PDF, il programma
 | Tasto destro | tabella | menu con Modifica, Elimina, Storno |
 | <kbd>↑</kbd> <kbd>↓</kbd> | autocompletamento | scorre l'elenco dei suggerimenti |
 
-## 10. Dati, backup e chiavetta USB {#10-dati-backup-e-chiavetta-usb}
+## 10. Dati, backup e chiavetta USB {#dati-backup-e-chiavetta-usb}
 
 Tutti i dati stanno in un solo file `.db` (SQLite). Per il **backup** basta copiarlo in un altro posto: fallo con regolarità. Il file si apre anche con altri strumenti, per esempio [DB Browser for SQLite](https://sqlitebrowser.org/).
 
@@ -258,17 +258,17 @@ E:\
 
 All'avvio il programma apre da solo il `contabilino.db` che si trova nella sua cartella.
 
-## 11. Limiti da conoscere {#11-limiti-da-conoscere}
+## 11. Limiti da conoscere {#limiti-da-conoscere}
 
 Contabilino tiene una contabilità in partita doppia essenziale. Alcune cose non le fa, e conviene saperlo:
 
 - **Riporto dei saldi, non chiusura dei conti.** Il [riporto](#riporto-dei-saldi) registra i saldi di apertura nel nuovo esercizio, ma il programma non fa le scritture di chiusura dell'esercizio precedente né la destinazione dell'utile: il risultato confluisce nel patrimonio netto.
 - **Il segno dei saldi.** Nella scheda Saldi Conti e nel suo export il saldo è sempre Dare − Avere: per i conti di passivo e di ricavo un saldo "normale" è quindi negativo. Il report Costi e Ricavi invece mostra costi e ricavi entrambi in positivo.
-- **Fornitori e clienti come costi e ricavi.** Se sono sottoconti di 400 e 500, il loro partitario elenca le fatture ma non i pagamenti: per lo scadenzario servono i sottoconti sotto 200 e 300 (vedi [Piano dei conti](#4-piano-dei-conti)).
+- **Fornitori e clienti come costi e ricavi.** Se sono sottoconti di 400 e 500, il loro partitario elenca le fatture ma non i pagamenti: per lo scadenzario servono i sottoconti sotto 200 e 300 (vedi [Piano dei conti](#piano-dei-conti)).
 - **IVA.** Ogni registrazione ha un conto in Dare e uno in Avere: una fattura con IVA detraibile si registra in due righe, l'imponibile sul conto di costo e l'IVA su un conto "IVA a credito" (da creare, di tipo ATTIVO). Registrando il totale sul costo, i costi risultano più alti. Contabilino non tiene i registri IVA.
 - **Non è un software fiscale.** Non produce registri obbligatori, dichiarazioni o bilancio civilistico e non sostituisce il commercialista: serve a tenere in ordine i movimenti e a passargli dati chiari.
 
-## 12. Eseguire dal codice sorgente {#12-eseguire-dal-codice-sorgente}
+## 12. Eseguire dal codice sorgente {#eseguire-dal-codice-sorgente}
 
 Serve Python 3.10 o successivo. Tkinter è incluso in Python per Windows e macOS.
 
