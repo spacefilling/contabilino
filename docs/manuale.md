@@ -290,7 +290,8 @@ python main.py
 Per creare l'eseguibile Windows:
 
 ```bash
-pyinstaller --onefile --windowed --name Contabilino --icon risorse/contabilino.ico --hidden-import openpyxl --collect-data sv_ttk main.py
+python strumenti/versione_exe.py
+pyinstaller --onefile --windowed --name Contabilino --icon risorse/contabilino.ico --hidden-import openpyxl --collect-data sv_ttk --version-file versione_exe.txt main.py
 ```
 
 L'eseguibile si trova in `dist\Contabilino.exe`. Su Windows lo stesso si ottiene con `build.bat`. Le release su GitHub vengono compilate in automatico a ogni nuova versione.

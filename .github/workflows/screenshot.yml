@@ -43,7 +43,8 @@ jobs:
         if: matrix.zoom == '100'
         shell: powershell
         run: |
-          pyinstaller --onefile --windowed --name Contabilino --icon risorse/contabilino.ico --hidden-import openpyxl --collect-data sv_ttk main.py
+          python strumenti/versione_exe.py
+          pyinstaller --onefile --windowed --name Contabilino --icon risorse/contabilino.ico --hidden-import openpyxl --collect-data sv_ttk --version-file versione_exe.txt main.py
           Copy-Item esempi/contabilino-esempio.db dist/contabilino.db
           Start-Process explorer.exe (Resolve-Path dist)
           Start-Sleep -Seconds 4

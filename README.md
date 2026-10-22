@@ -85,7 +85,8 @@ Dipendenze: `openpyxl` (export Excel), `reportlab` (export PDF), `sv-ttk` (tema 
 ### Creare l'eseguibile
 
 ```bash
-pyinstaller --onefile --windowed --name Contabilino --icon risorse/contabilino.ico --hidden-import openpyxl --collect-data sv_ttk main.py
+python strumenti/versione_exe.py
+pyinstaller --onefile --windowed --name Contabilino --icon risorse/contabilino.ico --hidden-import openpyxl --collect-data sv_ttk --version-file versione_exe.txt main.py
 ```
 
 Su Windows c'è anche [`build.bat`](build.bat). Ogni tag `vX.Y` pubblicato su GitHub avvia la [build automatica](.github/workflows/build.yml) dell'`.exe` e lo allega alla release.
