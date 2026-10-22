@@ -15,6 +15,7 @@ from dateutils import (
     format_display,
     periodo_label,
 )
+import tema
 from tema import px
 from widgets import SmartDateEntry, format_importo
 
@@ -991,13 +992,15 @@ class SelezioneContiDialog(tk.Toplevel):
         # Elenco con le spunte
         lista = ttk.Frame(frame)
         lista.pack(fill=tk.BOTH, expand=True, pady=(4, 0))
-        cols = ("spunta", "codice", "nome", "tipo")
-        self.tree = ttk.Treeview(lista, columns=cols, show="headings", height=12, selectmode="browse")
-        self.tree.heading("spunta", text="")
+        # La casella di spunta è l'immagine della colonna ad albero (#0)
+        self._immagini_spunta = tema.immagini_spunta(self)
+        cols = ("codice", "nome", "tipo")
+        self.tree = ttk.Treeview(lista, columns=cols, show="tree headings", height=12, selectmode="browse")
+        self.tree.heading("#0", text="")
         self.tree.heading("codice", text="Codice")
         self.tree.heading("nome", text="Conto")
         self.tree.heading("tipo", text="Tipo")
-        self.tree.column("spunta", width=px(30), anchor=tk.CENTER, stretch=False)
+        self.tree.column("#0", width=px(40), minwidth=px(40), stretch=False)
         self.tree.column("codice", width=px(70), anchor=tk.CENTER, stretch=False)
         self.tree.column("nome", width=px(260))
         self.tree.column("tipo", width=px(80), anchor=tk.CENTER, stretch=False)
@@ -1039,17 +1042,18 @@ class SelezioneContiDialog(tk.Toplevel):
             if testo and testo not in c["codice"].lower() and testo not in c["nome"].lower():
                 continue
             nome = ("    " + c["nome"]) if c["padre_id"] else c["nome"]
-            self.tree.insert("", tk.END, iid=str(c["id"]),
-                             values=(self._segno(c["id"]), c["codice"], nome, c["tipo"]))
+            self.tree.insert("", tk.END, iid=str(c["id"]), image=self._segno(c["id"]),
+                             values=(c["codice"], nome, c["tipo"]))
         self._aggiorna_conteggio()
 
     def _segno(self, conto_id):
-        return "☑" if conto_id in self._spuntati else "☐"
+        vuota, piena = self._immagini_spunta
+        return piena if conto_id in self._spuntati else vuota
 
     def _aggiorna(self, ids):
         for conto_id in ids:
             if self.tree.exists(str(conto_id)):
-                self.tree.set(str(conto_id), "spunta", self._segno(conto_id))
+                self.tree.item(str(conto_id), image=self._segno(conto_id))
         if self._spuntati:
             self._modo_var.set("spuntati")
         self._aggiorna_conteggio()
@@ -1061,7 +1065,7 @@ class SelezioneContiDialog(tk.Toplevel):
 
     def _on_clic(self, event):
         riga = self.tree.identify_row(event.y)
-        if riga and self.tree.identify_region(event.x, event.y) == "cell":
+        if riga and self.tree.identify_region(event.x, event.y) in ("cell", "tree"):
             self.tree.focus(riga)
             self.tree.selection_set(riga)
             self._alterna(riga)

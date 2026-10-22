@@ -47,8 +47,13 @@ class MainWindow:
         self.esercizio_info = ""
 
         self.root.title("Contabilino")
-        self.root.geometry(f"{px(1040)}x{px(680)}")
-        self.root.minsize(px(860), px(560))
+        # Misura comoda, ma mai più grande dello schermo (es. portatile con zoom al 150%)
+        schermo_l, schermo_a = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
+        larghezza = min(px(1040), schermo_l - px(40))
+        altezza = min(px(680), schermo_a - px(90))
+        x, y = max(0, (schermo_l - larghezza) // 2), max(0, (schermo_a - altezza) // 3)
+        self.root.geometry(f"{larghezza}x{altezza}+{x}+{y}")
+        self.root.minsize(min(px(860), larghezza), min(px(520), altezza))
 
         self._conti_map = {}  # "codice - nome" → id
         self._conti_labels = []
@@ -164,7 +169,6 @@ class MainWindow:
     def _build_giornale_tab(self):
         # Treeview - layout compatto: una riga per registrazione
         tree_frame = ttk.Frame(self.giornale_frame)
-        tree_frame.pack(fill=tk.BOTH, expand=True, padx=px(12), pady=(px(12), 0))
 
         cols = ("numero", "data", "causale", "dare", "avere", "importo")
         self.giornale_tree = ttk.Treeview(tree_frame, columns=cols, show="headings", selectmode="browse")
@@ -207,7 +211,6 @@ class MainWindow:
         self._menu_giornale.add_command(label="Storno...", command=self._on_storno_registrazione)
 
         azioni_frame = ttk.Frame(self.giornale_frame)
-        azioni_frame.pack(fill=tk.X, padx=px(12), pady=(px(8), 0))
         ttk.Label(azioni_frame, text="Registrazione selezionata", style="Secondario.TLabel").pack(side=tk.LEFT, padx=(0, px(8)))
         self._btn_modifica = ttk.Button(azioni_frame, text="Modifica", command=self._on_modifica_registrazione)
         self._btn_elimina = ttk.Button(azioni_frame, text="Elimina...", command=self._on_elimina_registrazione)
@@ -218,9 +221,14 @@ class MainWindow:
         # --- Riga di input inline ---
         self._build_input_row()
 
+        # Dal basso verso l'alto: se la finestra è bassa si accorcia la tabella,
+        # mentre la riga di inserimento e i pulsanti restano sempre visibili
+        self._input_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=px(12), pady=px(12))
+        azioni_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=px(12), pady=(px(8), 0))
+        tree_frame.pack(fill=tk.BOTH, expand=True, padx=px(12), pady=(px(12), 0))
+
     def _build_input_row(self):
         input_frame = ttk.LabelFrame(self.giornale_frame, text=self._TITOLO_NUOVA, padding=(px(12), px(8), px(12), px(12)))
-        input_frame.pack(fill=tk.X, padx=px(12), pady=px(12))
         self._input_frame = input_frame
 
         # Griglia di input
@@ -421,7 +429,8 @@ class MainWindow:
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         self.totali_frame = ttk.Frame(self.saldi_frame)
-        self.totali_frame.pack(fill=tk.X, padx=px(12), pady=(0, px(12)))
+        # Impacchettati prima della tabella: con la finestra bassa i totali restano visibili
+        self.totali_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=px(12), pady=(0, px(12)), before=tree_frame)
         self.totali_label = ttk.Label(self.totali_frame, text="", style="Forte.TLabel")
         self.totali_label.pack(side=tk.RIGHT)
 

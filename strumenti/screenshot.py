@@ -122,8 +122,14 @@ def main():
         foto(finestra, nome)
         finestra.destroy()
 
-    dialogo(lambda: dialogs.SelezioneContiDialog(root, db.get_conti(), "Partitari", None, solo_economici=True),
-            "04-scelta-conti")
+    def scelta_conti():
+        d = dialogs.SelezioneContiDialog(root, db.get_conti(), "Partitari", None, solo_economici=True)
+        d._da_var.set("401")
+        d._a_var.set("404")
+        d._spunta_intervallo()
+        return d
+
+    dialogo(scelta_conti, "04-scelta-conti")
     dialogo(lambda: dialogs.RiportoSaldiDialog(root, db, nuovo, vecchio), "05-riporto-saldi")
     dialogo(lambda: dialogs.GestioneContiDialog(root, db), "06-piano-dei-conti")
     dialogo(lambda: dialogs.GestioneEserciziDialog(root, db, vecchio), "07-esercizi")

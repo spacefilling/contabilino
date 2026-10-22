@@ -8,7 +8,7 @@ Contabilino - Genera logo e icone dal disegno vettoriale del logo
 Produce:
     docs/assets/logo.png        logo per il sito (256 px)
     risorse/contabilino.ico     icona dell'eseguibile Windows (16-256 px)
-    icona.py                    icone della finestra, incorporate nel codice
+    icona.py                    icone della finestra e caselle di spunta, incorporate nel codice
 """
 
 import base64
@@ -21,6 +21,8 @@ RADICE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VERDE = (22, 101, 82)
 BIANCO = (255, 255, 255)
 GIALLO = (245, 184, 0)
+ACCENTO = (0, 95, 184)       # blu di Windows 11
+BORDO_SPUNTA = (138, 138, 138)
 
 
 def logo(size):
@@ -66,9 +68,26 @@ def icona(size):
     return logo_nitido(size) if size <= 32 else logo(size)
 
 
-def png_base64(size):
+def spunta(size, piena):
+    """Casella di spunta in stile Windows 11: vuota (bordo grigio) o piena (blu con segno bianco)."""
+    s = size * 4
+    im = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    margine = s * 0.12
+    box = [margine, margine, s - margine, s - margine]
+    raggio = s * 0.18
+    if piena:
+        d.rounded_rectangle(box, radius=raggio, fill=ACCENTO)
+        punti = [(s * 0.30, s * 0.52), (s * 0.44, s * 0.66), (s * 0.71, s * 0.37)]
+        d.line(punti, fill=BIANCO, width=max(4, int(s * 0.09)), joint="curve")
+    else:
+        d.rounded_rectangle(box, radius=raggio, fill=BIANCO, outline=BORDO_SPUNTA, width=max(4, int(s * 0.06)))
+    return im.resize((size, size), Image.LANCZOS)
+
+
+def png_base64(immagine):
     buf = io.BytesIO()
-    icona(size).save(buf, format="PNG", optimize=True)
+    immagine.save(buf, format="PNG", optimize=True)
     return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
@@ -85,14 +104,18 @@ def main():
 
     righe = [
         '"""',
-        "Contabilino - Icone della finestra (logo in PNG, codificato in base64).",
+        "Contabilino - Icone della finestra e caselle di spunta (PNG codificati in base64).",
         "File generato da strumenti/genera_icone.py: non modificarlo a mano.",
         '"""',
         "",
         "ICONE = {",
     ]
     for size in (16, 24, 32, 48, 64, 128):
-        righe.append(f'    {size}: "{png_base64(size)}",')
+        righe.append(f'    {size}: "{png_base64(icona(size))}",')
+    righe.append("}")
+    righe += ["", "# Caselle di spunta per gli elenchi: misura → (vuota, piena)", "SPUNTE = {"]
+    for size in (16, 20, 24, 32):
+        righe.append(f'    {size}: ("{png_base64(spunta(size, False))}", "{png_base64(spunta(size, True))}"),')
     righe.append("}")
     with open(os.path.join(RADICE, "icona.py"), "w", encoding="utf-8") as f:
         f.write("\n".join(righe) + "\n")

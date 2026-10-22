@@ -15,7 +15,7 @@ import tkinter as tk
 from tkinter import font as tkfont
 from tkinter import ttk
 
-from icona import ICONE
+from icona import ICONE, SPUNTE
 
 SCALA = 1.0  # rapporto tra i DPI dello schermo e 96 (zoom di Windows al 100%)
 
@@ -166,3 +166,11 @@ def logo(root, misura=32):
     immagine = tk.PhotoImage(master=root, data=dati)
     _icone.append(immagine)
     return immagine
+
+
+def immagini_spunta(master):
+    """Caselle di spunta (vuota, piena) della misura adatta allo zoom, per gli elenchi."""
+    misura = min(SPUNTE, key=lambda m: abs(m - 16 * SCALA))
+    immagini = tuple(tk.PhotoImage(master=master, data=dati) for dati in SPUNTE[misura])
+    _icone.extend(immagini)
+    return immagini
