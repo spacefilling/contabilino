@@ -1,81 +1,70 @@
 """
 Contabilino - Entry point
 Programma di contabilità in partita doppia per piccole attività.
-All'avvio chiede di creare o aprire un database SQLite.
+All'avvio apre l'archivio della cartella del programma, oppure chiede quale
+archivio aprire o se crearne uno nuovo (vedi avvio.py).
 """
 
-import tkinter as tk
-from tkinter import filedialog, messagebox
 import os
 import sys
+import tkinter as tk
+from tkinter import messagebox
+
 import tema
+from avvio import scegli_archivio
 from db import Database
 from ui import MainWindow
 
 
 def get_base_dir():
-    """Restituisce la directory dell'eseguibile o dello script."""
+    """
+    Cartella del programma, dove stanno anche gli archivi: quella dell'eseguibile
+    (o dello script). Su Mac l'eseguibile è dentro Contabilino.app/Contents/MacOS:
+    la cartella giusta è quella che contiene Contabilino.app.
+    """
     if getattr(sys, "frozen", False):
-        return os.path.dirname(sys.executable)
+        cartella = os.path.dirname(sys.executable)
+        if sys.platform == "darwin" and cartella.endswith(os.path.join(".app", "Contents", "MacOS")):
+            cartella = os.path.dirname(os.path.dirname(os.path.dirname(cartella)))
+        return cartella
     return os.path.dirname(os.path.abspath(__file__))
 
 
-def startup_dialog():
-    """Mostra il dialogo iniziale per creare o aprire un database."""
-    root = tk.Tk()
-    root.withdraw()
-    tema.imposta_icona(root)  # anche le finestre di avvio hanno il logo
-
-    base_dir = get_base_dir()
-    default_db = os.path.join(base_dir, "contabilino.db")
-
-    # Se esiste un database nella stessa cartella, lo apre direttamente
-    if os.path.exists(default_db):
-        root.destroy()
-        return default_db, False
-
-    # Altrimenti chiede cosa fare
-    result = messagebox.askyesnocancel(
-        "Contabilino",
-        "Nessun database trovato nella cartella corrente.\n\n"
-        "Vuoi creare un nuovo database?\n\n"
-        "Sì = Crea nuovo database\n"
-        "No = Apri database esistente\n"
-        "Annulla = Esci",
-    )
-
-    if result is None:
-        root.destroy()
-        sys.exit(0)
-    elif result:
-        filepath = filedialog.asksaveasfilename(
-            title="Crea nuovo database",
-            initialdir=base_dir,
-            initialfile="contabilino.db",
-            defaultextension=".db",
-            filetypes=[("SQLite Database", "*.db"), ("Tutti i file", "*.*")],
-        )
-        if not filepath:
-            root.destroy()
-            sys.exit(0)
-        root.destroy()
-        return filepath, True
-    else:
-        filepath = filedialog.askopenfilename(
-            title="Apri database esistente",
-            initialdir=base_dir,
-            filetypes=[("SQLite Database", "*.db"), ("Tutti i file", "*.*")],
-        )
-        if not filepath:
-            root.destroy()
-            sys.exit(0)
-        root.destroy()
-        return filepath, False
+def cartella_utilizzabile(cartella):
+    """
+    Controlla che nella cartella del programma si possa scrivere l'archivio.
+    Su Mac un'app appena scaricata viene avviata da una posizione temporanea
+    di sola lettura (App Translocation): va prima spostata.
+    """
+    if "/AppTranslocation/" in cartella:
+        return ("macOS ha avviato Contabilino da una posizione temporanea, dove non può "
+                "salvare i dati.\n\nSposta Contabilino.app in un'altra cartella (per esempio "
+                "nella cartella dove vuoi tenere i dati, o su una chiavetta) trascinandola con "
+                "il Finder, poi riaprila.")
+    if not os.access(cartella, os.W_OK):
+        return (f"Nella cartella del programma non si può scrivere:\n{cartella}\n\n"
+                "Sposta Contabilino in una cartella dove hai i permessi di scrittura "
+                "(per esempio Documenti, il Desktop o una chiavetta USB) e riaprilo.")
+    return None
 
 
 def main():
     tema.abilita_dpi()  # prima di qualsiasi finestra: testo nitido con lo zoom di Windows
-    db_path, is_new = startup_dialog()
+    cartella = get_base_dir()
+
+    problema = cartella_utilizzabile(cartella)
+    if problema:
+        root = tk.Tk()
+        root.withdraw()
+        tema.imposta_icona(root)
+        messagebox.showerror("Contabilino", problema)
+        root.destroy()
+        sys.exit(1)
+
+    scelta = scegli_archivio(cartella)
+    if not scelta:
+        sys.exit(0)
+    db_path, is_new = scelta
 
     db = Database(db_path)
     db.connect()

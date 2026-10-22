@@ -11,4 +11,4 @@ Dati **inventati**, per provare Contabilino e vedere com'è fatto ogni export.
 | `partitari.pdf` | Partitari di tutti i conti di costo e ricavo |
 | `partitari-selezione.pdf` | Partitari dei soli conti 401 e 404, scelti nell'elenco |
 
-Per aprire il database di prova: **File → Apri Database** in Contabilino, oppure copialo accanto a `Contabilino.exe` con il nome `contabilino.db`.
+Per aprire l'archivio di prova: **File → Apri archivio…** in Contabilino, oppure copialo accanto a `Contabilino.exe`: la finestra di benvenuto lo propone.

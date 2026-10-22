@@ -73,6 +73,17 @@ def main():
     import dialogs
     from export import conti_economici
     from ui import MainWindow
+    import avvio
+
+    # 0. Finestra di benvenuto: con un archivio trovato nella cartella e con la cartella vuota
+    cartella_avvio = tempfile.mkdtemp()
+    shutil.copy(percorso, os.path.join(cartella_avvio, "contabilita-2026.db"))
+    for nome, archivi in (("00-benvenuto", avvio.archivi_nella_cartella(cartella_avvio)), ("00-benvenuto-vuoto", [])):
+        finestra = avvio.FinestraAvvio(cartella_avvio, archivi)
+        finestra.root.attributes("-topmost", True)
+        foto(finestra.root, nome)
+        finestra.root.destroy()
+    controlli.append(("benvenuto: archivio rinominato trovato", len(avvio.archivi_nella_cartella(cartella_avvio)) == 1))
 
     root = tk.Tk()
     tema.applica(root)

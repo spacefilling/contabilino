@@ -4,7 +4,10 @@
 
 1) AVVIARE IL PROGRAMMA
    Fai doppio clic su  Contabilino.exe
-   Non serve installare niente.
+   NON SERVE INSTALLARE NIENTE: il programma è tutto in quel file.
+   I dati stanno in un solo file (contabilino.db) nella stessa cartella.
+   Per spostare tutto su un altro computer o su una chiavetta basta
+   copiare la cartella.
 
 
 2) IL PRIMO AVVIO: AVVISO DI WINDOWS (NORMALE)
@@ -22,10 +25,12 @@
 
 3) ALL'AVVIO
    - Se nella stessa cartella c'è il file  contabilino.db , lo apre da solo.
-   - Altrimenti chiede se creare un nuovo database o aprirne uno esistente:
-       Sì      = crea un nuovo archivio
-       No      = apri un archivio già esistente
-       Annulla = esci
+   - Altrimenti mostra la finestra di benvenuto:
+       . se nella cartella c'è un archivio di Contabilino con un altro
+         nome, lo propone: "Apri l'archivio selezionato";
+       . "Crea un nuovo archivio" per cominciare da zero;
+       . "Apri un archivio da un'altra cartella..." per sceglierne uno;
+       . "Esci".
 
 
 4) DOVE FINISCONO I DATI

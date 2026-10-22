@@ -8,6 +8,7 @@ Contabilino - Genera logo e icone dal disegno vettoriale del logo
 Produce:
     docs/assets/logo.png        logo per il sito (256 px)
     risorse/contabilino.ico     icona dell'eseguibile Windows (16-256 px)
+    risorse/contabilino.icns    icona dell'app per Mac (16-1024 px)
     icona.py                    icone della finestra e caselle di spunta, incorporate nel codice
 """
 
@@ -101,6 +102,8 @@ def main():
         os.path.join(RADICE, "risorse", "contabilino.ico"),
         sizes=[(m, m) for m in misure], append_images=immagini[:-1],
     )
+    # Mac: l'immagine più grande; Pillow ricava le altre misure dell'icona
+    logo(1024).save(os.path.join(RADICE, "risorse", "contabilino.icns"))
 
     righe = [
         '"""',

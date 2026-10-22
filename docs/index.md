@@ -6,7 +6,9 @@ faq:
   - q: 'Contabilino è gratuito?'
     a: 'Sì. Contabilino è gratuito e open source, con licenza GNU GPL v3. Puoi usarlo anche per la tua attività; le versioni modificate si possono distribuire solo con la stessa licenza e con il codice sorgente.'
   - q: 'Serve installarlo?'
-    a: 'No. È un unico file `Contabilino.exe`: lo copi in una cartella, anche su una chiavetta USB, e lo avvii con un doppio clic. Non serve nemmeno installare Python.'
+    a: 'No. È un unico file `Contabilino.exe`: lo copi in una cartella, anche su una chiavetta USB, e lo avvii con un doppio clic. Non serve installare Python né avere i permessi di amministratore, e non scrive nel registro di Windows.'
+  - q: 'Come porto Contabilino su un altro computer?'
+    a: 'Copia la cartella con `Contabilino.exe` e il file dell''archivio (`contabilino.db`) su una chiavetta o sull''altro computer, e avvia il programma da lì. Non c''è altro da trasferire.'
   - q: 'Dove sono salvati i dati?'
     a: 'In un solo file `contabilino.db` (un database SQLite) nella stessa cartella del programma. Per il backup basta copiare quel file.'
   - q: 'Come tengo i conti dei singoli clienti e fornitori?'
@@ -25,13 +27,18 @@ faq:
 
 {% include download.html %}
 
+<div class="punti">
+  <div><strong>Non si installa</strong><span>Un solo file da avviare con un doppio clic. Non serve Python né essere amministratori.</span></div>
+  <div><strong>I dati in un solo file</strong><span>Tutto l'archivio sta in un file <code>.db</code> accanto al programma.</span></div>
+  <div><strong>Si porta ovunque</strong><span>Su una chiavetta USB o su un altro computer: basta copiare la cartella. Il backup è una copia del file.</span></div>
+</div>
+
 ![Contabilino su Windows 11: libro giornale con la riga di inserimento rapido]({{ '/assets/schermate/01-libro-giornale.png' | relative_url }})
 
 ## Che cos'è Contabilino?
 
 Contabilino è un piccolo programma per chi deve tenere una contabilità in **partita doppia** senza un gestionale: piccole attività, associazioni, professionisti. Ogni operazione è una riga del libro giornale con un conto in Dare, un conto in Avere e un importo. Da quelle righe il programma ricava saldi, costi e ricavi, partitari di clienti e fornitori.
 
-È un solo file `.exe` che non richiede installazione, e i dati stanno in un solo file `.db` accanto al programma: si può tenere tutto su una chiavetta USB.
 
 ## Funzioni
 

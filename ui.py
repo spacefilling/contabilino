@@ -6,6 +6,8 @@ Le registrazioni si possono correggere, eliminare o stornare.
 
 import os
 import sqlite3
+import subprocess
+import sys
 import tkinter as tk
 import webbrowser
 from tkinter import ttk, messagebox, filedialog
@@ -18,6 +20,7 @@ from dialogs import (
     StornoDialog,
 )
 import tema
+from avvio import info_archivio, messaggio_non_valido
 from tema import px
 from widgets import SmartDateEntry, AmountEntry, AutocompleteEntry, format_importo
 from export import FORMATI, SEGNO_SALDO, conti_economici, crea_report, movimenti_partitario, salva_report
@@ -98,8 +101,9 @@ class MainWindow:
         menubar = tk.Menu(self.root)
 
         file_menu = tk.Menu(menubar, tearoff=0)
-        file_menu.add_command(label="Nuovo Database...", command=self._on_nuovo_db)
-        file_menu.add_command(label="Apri Database...", command=self._on_apri_db)
+        file_menu.add_command(label="Nuovo archivio...", command=self._on_nuovo_db)
+        file_menu.add_command(label="Apri archivio...", command=self._on_apri_db)
+        file_menu.add_command(label="Mostra la cartella dell'archivio", command=self._on_mostra_cartella)
         file_menu.add_separator()
         file_menu.add_command(label="Esci", command=self.root.quit)
         menubar.add_cascade(label="File", menu=file_menu)
@@ -741,20 +745,48 @@ class MainWindow:
 
     def _on_nuovo_db(self):
         filepath = filedialog.asksaveasfilename(
-            title="Crea nuovo database",
+            title="Crea un nuovo archivio",
+            initialdir=os.path.dirname(self.db.db_path),
+            initialfile="contabilino-nuovo.db",
             defaultextension=".db",
-            filetypes=[("SQLite Database", "*.db"), ("Tutti i file", "*.*")],
+            filetypes=[("Archivio di Contabilino", "*.db"), ("Tutti i file", "*.*")],
         )
-        if filepath:
-            self._switch_db(filepath, new=True)
+        if not filepath:
+            return
+        if os.path.exists(filepath):
+            messagebox.showerror(
+                "Archivio già esistente",
+                "Esiste già un file con questo nome: scegline un altro.\n"
+                "(Per usare un archivio esistente scegli File > Apri archivio.)",
+            )
+            return
+        self._switch_db(filepath, new=True)
 
     def _on_apri_db(self):
         filepath = filedialog.askopenfilename(
-            title="Apri database esistente",
-            filetypes=[("SQLite Database", "*.db"), ("Tutti i file", "*.*")],
+            title="Apri un archivio di Contabilino",
+            initialdir=os.path.dirname(self.db.db_path),
+            filetypes=[("Archivio di Contabilino", "*.db"), ("Tutti i file", "*.*")],
         )
-        if filepath:
-            self._switch_db(filepath, new=False)
+        if not filepath:
+            return
+        if not info_archivio(filepath):
+            messagebox.showerror("File non valido", messaggio_non_valido(filepath))
+            return
+        self._switch_db(filepath, new=False)
+
+    def _on_mostra_cartella(self):
+        """Apre la cartella dell'archivio (utile per il backup: basta copiare il file .db)."""
+        cartella = os.path.dirname(os.path.abspath(self.db.db_path))
+        try:
+            if sys.platform == "win32":
+                os.startfile(cartella)
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", cartella])
+            else:
+                subprocess.Popen(["xdg-open", cartella])
+        except OSError:
+            messagebox.showinfo("Cartella dell'archivio", cartella)
 
     def _switch_db(self, filepath, new=False):
         self.db.close()

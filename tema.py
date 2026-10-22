@@ -97,9 +97,13 @@ def applica(root):
 
 
 def _famiglia(root):
-    """Segoe UI Variable su Windows 11, Segoe UI su Windows 10, il font di sistema altrove."""
+    """
+    Segoe UI Variable su Windows 11, Segoe UI su Windows 10; su Linux il font
+    dell'interfaccia più comune disponibile; su Mac il font di sistema.
+    """
     disponibili = set(tkfont.families(root))
-    for famiglia in ("Segoe UI Variable Text", "Segoe UI"):
+    for famiglia in ("Segoe UI Variable Text", "Segoe UI", "Cantarell", "Ubuntu", "Noto Sans",
+                     "Inter", "Liberation Sans", "DejaVu Sans"):
         if famiglia in disponibili:
             return famiglia
     return tkfont.nametofont("TkDefaultFont", root).actual("family")

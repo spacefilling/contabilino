@@ -7,7 +7,11 @@
 
 **Registra costi e ricavi in partita doppia senza un gestionale.** Contabilino è un programma gratuito e open source (GPL-3.0) per Windows, pensato per piccole attività, associazioni e professionisti che tengono una contabilità essenziale: libro giornale, piano dei conti con clienti e fornitori, esercizi contabili con riporto dei saldi, costi e ricavi, partitari, export in CSV, Excel e PDF.
 
-È un unico file `.exe` per Windows: **non serve installarlo né installare Python**. I dati stanno in un solo file `.db` accanto al programma, anche su una chiavetta USB.
+> **Niente installazione, tutto in una cartella.**
+> - **Non si installa**: è un unico file, `Contabilino.exe`. Lo copi in una cartella (anche su una chiavetta USB) e lo avvii con un doppio clic. Non serve Python, non serve essere amministratori.
+> - **I dati stanno in un solo file**: l'archivio `contabilino.db`, accanto al programma.
+> - **Si sposta e si salva copiando**: per il backup copia il file `.db`; per passare a un altro computer copia la cartella (programma + archivio) e riparti da lì.
+> - **Non lascia tracce**: non scrive nel registro di Windows né in altre cartelle. Per toglierlo basta cancellare la cartella.
 
 **Sito e manuale:** [spacefilling.github.io/contabilino](https://spacefilling.github.io/contabilino/) · [Manuale](https://spacefilling.github.io/contabilino/manuale/)
 
@@ -31,12 +35,15 @@
 
 ## Download e avvio
 
+Nessuna installazione: si scarica un file e si avvia.
+
+
 1. Scarica [`Contabilino.exe`](https://github.com/spacefilling/contabilino/releases/latest/download/Contabilino.exe) dall'[ultima release](https://github.com/spacefilling/contabilino/releases/latest).
 2. Mettilo in una cartella (anche su una chiavetta USB) e fai doppio clic.
 3. Al primo avvio Windows può mostrare l'avviso *"Windows ha protetto il PC"*: l'eseguibile non è firmato digitalmente. Clicca **Ulteriori informazioni → Esegui comunque**.
-4. Scegli **crea un nuovo database**. Il file `contabilino.db` nasce nella stessa cartella e ai successivi avvii si apre da solo.
+4. Nella finestra di benvenuto scegli **Crea un nuovo archivio**: il file `contabilino.db` nasce nella stessa cartella e ai successivi avvii si apre da solo. Se nella cartella c'è già un archivio di Contabilino (anche con un altro nome), la finestra lo propone.
 
-Per provarlo con dati inventati, copia [`esempi/contabilino-esempio.db`](esempi/) accanto all'eseguibile, rinominalo `contabilino.db` e avvia il programma.
+Per provarlo con dati inventati, copia [`esempi/contabilino-esempio.db`](esempi/) accanto all'eseguibile e avvia il programma: la finestra di benvenuto lo propone.
 
 ## Report ed export
 

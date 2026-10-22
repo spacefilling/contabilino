@@ -26,16 +26,16 @@ permalink: /manuale/
 
 ## 1. Avvio {#avvio}
 
-Scarica [`Contabilino.exe`]({{ site.download_url }}) dall'[ultima release]({{ site.repository_url }}/releases/latest) e mettilo in una cartella, anche su una chiavetta USB. Non c'è niente da installare.
+Scarica [`Contabilino.exe`]({{ site.download_url }}) dall'[ultima release]({{ site.repository_url }}/releases/latest) e mettilo in una cartella, anche su una chiavetta USB. **Non c'è niente da installare**: il programma è tutto in quel file, e i dati staranno in un solo file accanto a lui (vedi [Dati, backup e chiavetta USB](#dati-backup-e-chiavetta-usb)).
 
 Al primo avvio Windows può mostrare l'avviso *"Windows ha protetto il PC"*: l'eseguibile non è firmato digitalmente. Clicca **Ulteriori informazioni → Esegui comunque**. Capita solo la prima volta.
 
-All'avvio il programma cerca il file `contabilino.db` nella sua cartella:
+All'avvio il programma cerca l'archivio nella sua cartella:
 
-- se c'è, lo apre;
-- se non c'è, chiede se **creare un nuovo database** o **aprirne uno esistente**.
+- se c'è `contabilino.db`, lo apre subito (è il caso di tutti i giorni);
+- altrimenti mostra la **finestra di benvenuto**. Se nella cartella trova archivi di Contabilino con un altro nome, li elenca con il numero di registrazioni e la data di modifica e propone di aprire il più recente. Poi ci sono **Crea un nuovo archivio**, **Apri un archivio da un'altra cartella…** ed **Esci**.
 
-Altri database si aprono o si creano da **File → Apri Database** e **File → Nuovo Database**.
+Altri archivi si aprono o si creano da **File → Apri archivio…** e **File → Nuovo archivio…**; **File → Mostra la cartella dell'archivio** apre la cartella del file (comodo per il backup). Un file che non è un archivio di Contabilino non viene aperto.
 
 Quando una nuova versione cambia il formato del database, il programma lo aggiorna da solo all'apertura e prima salva una copia di sicurezza del file, avvisando dove si trova.
 
@@ -46,7 +46,7 @@ Quando una nuova versione cambia il formato del database, il programma lo aggior
 3. Se serve, completa il piano dei conti da **Conti → Gestione Piano dei Conti**: ci sono già sei conti predefiniti. Aggiungi un sottoconto per ogni cliente e fornitore.
 4. Registra le operazioni nella scheda **Libro Giornale**.
 
-Per provare il programma con dati inventati, usa il database di esempio [`esempi/contabilino-esempio.db`]({{ site.repository_url }}/tree/main/esempi): copialo accanto all'eseguibile e rinominalo `contabilino.db`, oppure aprilo da **File → Apri Database**.
+Per provare il programma con dati inventati, usa l'archivio di esempio [`esempi/contabilino-esempio.db`]({{ site.repository_url }}/tree/main/esempi): copialo accanto all'eseguibile e la finestra di benvenuto lo propone, oppure aprilo da **File → Apri archivio…**.
 
 ## 3. Esercizi {#esercizi}
 
@@ -262,7 +262,9 @@ Se il file da sovrascrivere è aperto in Excel o in un lettore PDF, il programma
 
 ## 10. Dati, backup e chiavetta USB {#dati-backup-e-chiavetta-usb}
 
-Tutti i dati stanno in un solo file `.db` (SQLite). Per il **backup** basta copiarlo in un altro posto: fallo con regolarità. Il file si apre anche con altri strumenti, per esempio [DB Browser for SQLite](https://sqlitebrowser.org/).
+Contabilino è **portabile**: non si installa, non scrive nel registro di Windows né in altre cartelle, e tutti i dati stanno in un solo file `.db` (SQLite) accanto al programma. Per toglierlo basta cancellare la cartella.
+
+Per il **backup** basta copiare il file `.db` in un altro posto: fallo con regolarità. Per **passare a un altro computer** copia la cartella con il programma e l'archivio e avvia il programma da lì. Il file si apre anche con altri strumenti, per esempio [DB Browser for SQLite](https://sqlitebrowser.org/).
 
 Per usare Contabilino da una **chiavetta USB** copia sulla chiavetta l'eseguibile e il database:
 

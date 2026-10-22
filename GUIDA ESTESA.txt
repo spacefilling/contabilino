@@ -68,9 +68,16 @@ Da eseguibile (dopo la compilazione):
 
     Contabilino.exe
 
-Al primo avvio:
-  - Se nella stessa cartella esiste un file "contabilino.db", lo apre
-  - Altrimenti chiede se creare un nuovo database o aprirne uno esistente
+Non c'è niente da installare: il programma è tutto nel file .exe e i dati
+stanno in un solo file .db nella stessa cartella.
+
+All'avvio:
+  - Se nella stessa cartella esiste "contabilino.db", lo apre subito
+  - Altrimenti mostra la finestra di benvenuto: propone gli archivi di
+    Contabilino trovati nella cartella (con numero di registrazioni e data
+    di modifica), oppure "Crea un nuovo archivio", "Apri un archivio da
+    un'altra cartella..." ed "Esci"
+  - Un file che non è un archivio di Contabilino non viene aperto
 
 
 ================================================================================
@@ -448,14 +455,18 @@ LIMITI DA CONOSCERE
 12. PORTABILITÀ (CHIAVETTA USB)
 ================================================================================
 
-Contabilino è progettato per essere portatile:
+Contabilino è portabile: non si installa, non scrive nel registro di
+Windows né in altre cartelle, e tutti i dati stanno in un solo file .db.
+Per spostarlo su un altro computer basta copiare la cartella; per toglierlo
+basta cancellarla.
 
   1. Compila l'exe con build.bat
   2. Copia dist\Contabilino.exe sulla chiavetta
   3. (Opzionale) Copia anche un file .db esistente
 
 L'exe cerca automaticamente "contabilino.db" nella propria cartella.
-Puoi avere più database e aprirli da File > Apri Database.
+Puoi avere più archivi e aprirli da File > Apri archivio; File > Mostra
+la cartella dell'archivio apre la cartella del file in uso.
 
 Struttura tipica sulla chiavetta:
 

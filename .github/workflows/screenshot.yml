@@ -66,3 +66,76 @@ jobs:
         with:
           name: screenshot-zoom-${{ matrix.zoom }}
           path: screenshot-${{ matrix.zoom }}
+
+  # Mac e Linux: compila l'app, la avvia davvero (finestra di benvenuto e finestra
+  # principale) e controlla che resti aperta; screenshot dove il sistema lo permette.
+  prova-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compila l'app
+        run: |
+          pip install -r requirements.txt
+          pyinstaller --windowed --name Contabilino --icon risorse/contabilino.icns --osx-bundle-identifier it.spacefiller.contabilino --hidden-import openpyxl main.py
+      - name: Avvia l'app
+        run: |
+          mkdir -p prova-mac
+          prova() {
+            dist/Contabilino.app/Contents/MacOS/Contabilino > prova-mac/$1.log 2>&1 &
+            PID=$!
+            sleep 12
+            screencapture -x prova-mac/$1.png || true
+            if kill -0 $PID 2>/dev/null; then echo "OK    $1: l'app è aperta" | tee -a prova-mac/controlli.txt; kill $PID
+            else echo "ERRORE $1: l'app si è chiusa" | tee -a prova-mac/controlli.txt; cat prova-mac/$1.log; fi
+          }
+          cp esempi/contabilino-esempio.db dist/contabilita-2026.db
+          prova benvenuto
+          mv dist/contabilita-2026.db dist/contabilino.db
+          prova principale
+          ! grep -q ERRORE prova-mac/controlli.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prova-mac
+          path: prova-mac
+
+  prova-linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compila l'eseguibile
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tk8.6 libtk8.6 xvfb imagemagick
+          pip install -r requirements.txt
+          pyinstaller --onefile --windowed --name Contabilino --hidden-import openpyxl main.py
+      - name: Avvia l'eseguibile
+        run: |
+          mkdir -p prova-linux
+          Xvfb :99 -screen 0 1920x1080x24 &
+          export DISPLAY=:99
+          sleep 2
+          prova() {
+            dist/Contabilino > prova-linux/$1.log 2>&1 &
+            PID=$!
+            sleep 10
+            import -window root prova-linux/$1.png || true
+            if kill -0 $PID 2>/dev/null; then echo "OK    $1: l'app è aperta" | tee -a prova-linux/controlli.txt; kill $PID
+            else echo "ERRORE $1: l'app si è chiusa" | tee -a prova-linux/controlli.txt; cat prova-linux/$1.log; fi
+          }
+          cp esempi/contabilino-esempio.db dist/contabilita-2026.db
+          prova benvenuto
+          mv dist/contabilita-2026.db dist/contabilino.db
+          prova principale
+          ! grep -q ERRORE prova-linux/controlli.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prova-linux
+          path: prova-linux

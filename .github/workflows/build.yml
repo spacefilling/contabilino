@@ -1,10 +1,12 @@
-name: Build Contabilino.exe
+name: Build Contabilino
 
-# Si avvia quando si pubblica una versione (tag tipo v1.6)
-# oppure manualmente dal tab "Actions" della repo (Run workflow).
+# Compila Contabilino per Windows, Mac e Linux. Si avvia quando si pubblica
+# una versione (tag tipo v1.7) oppure manualmente dal tab "Actions" (Run workflow):
+# i file compilati sono sempre scaricabili dalla pagina del run (artifacts);
+# con un tag vengono anche allegati alla Release.
 #
-# Firma con SignPath Foundation: si attiva da sola quando nelle impostazioni del
-# repository (Settings > Secrets and variables > Actions) ci sono
+# Firma Windows con SignPath Foundation: si attiva da sola quando nelle
+# impostazioni del repository (Settings > Secrets and variables > Actions) ci sono
 #   variabili: SIGNPATH_ORGANIZATION_ID, SIGNPATH_PROJECT_SLUG, SIGNPATH_SIGNING_POLICY_SLUG
 #   secret:    SIGNPATH_API_TOKEN
 # Ogni richiesta di firma va poi approvata a mano su SignPath. Senza queste
@@ -20,7 +22,7 @@ permissions:
   actions: read
 
 jobs:
-  build-windows:
+  windows:
     runs-on: windows-latest
     timeout-minutes: 330  # lascia il tempo di approvare la firma su SignPath
 
@@ -42,8 +44,6 @@ jobs:
       - name: Compila l'eseguibile
         run: pyinstaller --onefile --windowed --name Contabilino --icon risorse/contabilino.ico --hidden-import openpyxl --version-file versione_exe.txt --add-data "risorse/contabilino.ico;risorse" main.py
 
-      # L'exe è sempre scaricabile dalla pagina del run (tab Actions > artifacts),
-      # anche per un semplice "Run workflow" senza pubblicare una versione.
       # È anche l'artifact che SignPath scarica per firmarlo.
       - name: Carica l'eseguibile come artifact
         id: artifact-non-firmato
@@ -52,7 +52,6 @@ jobs:
           name: Contabilino-windows
           path: dist/Contabilino.exe
 
-      # Ricava il numero di versione dal tag (es. v1.6 -> 1.6) per il titolo e la firma.
       - name: Ricava versione dal tag
         if: startsWith(github.ref, 'refs/tags/')
         id: ver
@@ -83,14 +82,115 @@ jobs:
           Write-Output "Firma: $($firma.Status) - $($firma.SignerCertificate.Subject)"
           if ($firma.Status -ne 'Valid') { throw "La firma dell'eseguibile non è valida" }
 
-      # Se è stato pubblicato un tag (es. v1.6), allega l'exe a una Release.
-      - name: Pubblica la Release con l'exe
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Prepara il file per la Release
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: dist/Contabilino.exe
+
+  mac:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest
+            nome: apple-silicon
+          - runner: macos-15-intel
+            nome: intel
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - name: Checkout del codice
+        uses: actions/checkout@v4
+
+      - name: Installa Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installa dipendenze
+        run: pip install -r requirements.txt
+
+      - name: Compila l'app
+        run: pyinstaller --windowed --name Contabilino --icon risorse/contabilino.icns --osx-bundle-identifier it.spacefiller.contabilino --hidden-import openpyxl main.py
+
+      # Versione e copyright nelle informazioni dell'app (Finder > Ottieni informazioni),
+      # poi di nuovo la firma "ad hoc" senza la quale i Mac Apple Silicon non avviano l'app.
+      - name: Versione dell'app e firma ad hoc
+        run: |
+          VERSIONE=$(python -c "from version import VERSIONE; print(VERSIONE)")
+          PLIST=dist/Contabilino.app/Contents/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSIONE" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSIONE" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :NSHumanReadableCopyright string Copyright (C) 2026 spacefiller - GNU GPL v3" "$PLIST"
+          codesign --force --deep --sign - dist/Contabilino.app
+          ditto -c -k --keepParent dist/Contabilino.app Contabilino-mac-${{ matrix.nome }}.zip
+
+      - name: Prepara il file per la Release
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-mac-${{ matrix.nome }}
+          path: Contabilino-mac-${{ matrix.nome }}.zip
+
+  linux:
+    # Ubuntu 22.04: l'eseguibile gira anche sulle distribuzioni meno recenti (glibc 2.35)
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout del codice
+        uses: actions/checkout@v4
+
+      - name: Installa Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installa dipendenze
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tk8.6 libtk8.6
+          pip install -r requirements.txt
+
+      - name: Compila l'eseguibile
+        run: |
+          pyinstaller --onefile --windowed --name Contabilino --hidden-import openpyxl main.py
+          tar czf Contabilino-linux.tar.gz -C dist Contabilino
+
+      - name: Prepara il file per la Release
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-linux
+          path: Contabilino-linux.tar.gz
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [windows, mac, linux]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del codice
+        uses: actions/checkout@v4
+
+      - name: Scarica i file compilati
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: release
+          merge-multiple: true
+
+      - name: Ricava versione dal tag
+        id: ver
+        run: echo "num=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Pubblica la Release
         uses: softprops/action-gh-release@v2
         with:
           name: Contabilino ${{ steps.ver.outputs.num }}
           body_path: RELEASE_NOTES.md
           files: |
-            dist/Contabilino.exe
+            release/Contabilino.exe
+            release/Contabilino-mac-apple-silicon.zip
+            release/Contabilino-mac-intel.zip
+            release/Contabilino-linux.tar.gz
             GUIDA RAPIDA.txt
             GUIDA ESTESA.txt
