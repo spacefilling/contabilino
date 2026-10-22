@@ -1,5 +1,14 @@
 # Changelog
 
+## Non ancora rilasciato
+
+- Aspetto in stile Windows 11 (tema Sun Valley, font Segoe UI, pulsanti principali in evidenza) e intestazione con logo ed esercizio attivo.
+- Testo nitido con lo zoom di Windows (125%, 150%…); la finestra si adatta allo schermo.
+- Logo come icona della finestra, della barra delle applicazioni e del file `.exe`.
+- La tendina dei conti si chiude passando a un altro campo, con un clic in un altro punto della finestra o passando a un altro programma (prima restava aperta fino a "Pulisci").
+- Scelta dei conti con caselle di spunta in stile Windows 11.
+- Database di esempio con incassi, pagamenti e versamenti in banca.
+
 ## 1.4 – 2026-10-22
 
 Prima versione pubblica.

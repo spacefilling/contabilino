@@ -13,7 +13,7 @@
 
 **Download:** [Contabilino.exe (ultima versione)](https://github.com/spacefilling/contabilino/releases/latest/download/Contabilino.exe)
 
-![Contabilino: contabilità in partita doppia con export di costi, ricavi e partitari in PDF](docs/assets/social-preview.png)
+![Contabilino su Windows 11: libro giornale con la riga di inserimento rapido](docs/assets/schermate/01-libro-giornale.png)
 
 ## Funzioni
 
@@ -93,12 +93,15 @@ Su Windows c'è anche [`build.bat`](build.bat). Ogni tag `vX.Y` pubblicato su Gi
 | File | Contenuto |
 | --- | --- |
 | `main.py` | avvio, scelta o creazione del database |
+| `tema.py` | aspetto in stile Windows 11 (tema Sun Valley), font, zoom dello schermo, icona |
 | `ui.py` | finestra principale: libro giornale, saldi, menu |
 | `dialogs.py` | esercizi, piano dei conti, eliminazione e storno, scelta dei conti da esportare |
 | `widgets.py` | campi data, importo e autocompletamento |
 | `db.py` | database SQLite e aggiornamento automatico del formato |
 | `export.py` | report e scrittura in CSV, Excel e PDF |
 | `dateutils.py` | date e periodi degli esercizi |
+| `icona.py` | logo e caselle di spunta incorporati (generato da `strumenti/genera_icone.py`) |
+| `strumenti/` | generazione di logo e icone, screenshot automatici su Windows |
 
 ## Note e limiti
 

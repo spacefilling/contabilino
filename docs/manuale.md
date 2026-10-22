@@ -84,6 +84,8 @@ La finestra del riporto mostra i saldi che verranno registrati e chiede il **con
 - conto di attivo (es. Banca 5.350,00 in Dare): Dare Banca, Avere Patrimonio netto;
 - conto di passivo (es. Debiti fornitori 1.200,00 in Avere): Dare Patrimonio netto, Avere Debiti fornitori.
 
+![Finestra del riporto dei saldi con anteprima delle registrazioni]({{ '/assets/schermate/05-riporto-saldi.png' | relative_url }}){: .esempio width="460"}
+
 Alla fine il patrimonio netto ha come saldo la differenza tra attività e passività, cioè il capitale più gli utili (o meno le perdite) accumulati. I conti di costo e ricavo non si riportano: ogni esercizio ha i suoi.
 
 Conviene riportare i saldi quando l'esercizio precedente è completo, meglio se già chiuso: se dopo il riporto cambi le registrazioni dell'esercizio precedente, i saldi di apertura non si aggiornano da soli. Se l'esercizio contiene già delle aperture, la finestra lo segnala, perché riportando di nuovo i saldi verrebbero contati due volte.
@@ -128,6 +130,8 @@ Lasciando dei numeri liberi tra un gruppo e l'altro (es. 401–449 materie prime
 Un conto non si può eliminare se ha movimenti o sottoconti.
 
 ## 5. Registrare un'operazione {#registrare-unoperazione}
+
+![Libro giornale con la riga di inserimento]({{ '/assets/schermate/01-libro-giornale.png' | relative_url }}){: .esempio}
 
 La riga di inserimento è in fondo alla scheda **Libro Giornale**: **Data**, **Causale**, **Conto Dare**, **Conto Avere**, **Importo**. Si compila tutta da tastiera, con <kbd>Tab</kbd> per passare al campo successivo.
 
@@ -180,7 +184,9 @@ Lo storno va nell'esercizio che contiene la data scelta, che deve essere aperto.
 
 ## 7. Saldi conti {#saldi-conti}
 
-La scheda **Saldi Conti** mostra per ogni conto il totale Dare, il totale Avere e il saldo (Dare − Avere), con i sottoconti rientrati sotto il conto padre. Il saldo ha sempre lo stesso verso: per i conti di passivo e di ricavo un saldo normale è negativo (vedi [Limiti](#limiti-da-conoscere)). In fondo ci sono i totali generali: il totale Dare deve essere uguale al totale Avere.
+La scheda **Saldi Conti** mostra per ogni conto il totale Dare, il totale Avere e il saldo (Dare − Avere), con i sottoconti rientrati sotto il conto padre. Il saldo ha sempre lo stesso verso: per i conti di passivo e di ricavo un saldo normale è negativo (vedi [Limiti](#limiti-da-conoscere)).
+
+![Scheda Saldi Conti]({{ '/assets/schermate/03-saldi-conti.png' | relative_url }}){: .esempio} In fondo ci sono i totali generali: il totale Dare deve essere uguale al totale Avere.
 
 ## 8. Report ed export {#report-ed-export}
 
@@ -217,6 +223,8 @@ Per **Saldi Conti**, **Costi e Ricavi** e **Partitari**, prima di salvare si sce
   - clic sul conto (o <kbd>barra spaziatrice</kbd>): spunta o toglie la spunta. Spuntando un conto padre si spuntano anche i suoi sottoconti, per esempio 400 con tutti i fornitori registrati sotto 400;
   - **Codici da … a …** e **Spunta intervallo**: spunta tutti i conti con il codice in quell'intervallo, per esempio da 401 a 449;
   - **Cerca**: mostra solo i conti che contengono il testo nel codice o nel nome, e **Spunta tutti quelli in elenco** spunta quelli trovati.
+
+![Scelta dei conti da esportare]({{ '/assets/schermate/04-scelta-conti.png' | relative_url }}){: .esempio width="420"}
 
 I metodi si combinano: per esempio un intervallo di fornitori più due clienti cercati per nome. Per Costi e Ricavi l'elenco comprende solo i conti di costo e ricavo, per Saldi Conti e Partitari tutti i conti.
 

@@ -25,7 +25,7 @@ faq:
 
 {% include download.html %}
 
-![Contabilino: report Costi e Ricavi in PDF]({{ '/assets/social-preview.png' | relative_url }})
+![Contabilino su Windows 11: libro giornale con la riga di inserimento rapido]({{ '/assets/schermate/01-libro-giornale.png' | relative_url }})
 
 ## Che cos'è Contabilino?
 
@@ -44,6 +44,18 @@ Contabilino è un piccolo programma per chi deve tenere una contabilità in **pa
 - **Costi e ricavi** con totali per gruppo e risultato dell'esercizio.
 - **Partitari** di qualsiasi conto (clienti, fornitori, banca, costi, ricavi) con saldo progressivo.
 - **Export in CSV, Excel e PDF**, per tutti i conti o solo per quelli scelti.
+
+## Schermate
+
+<figure class="figura">
+  <img class="esempio" src="{{ '/assets/schermate/03-saldi-conti.png' | relative_url }}" alt="Scheda Saldi Conti con totale Dare, totale Avere e saldo di ogni conto">
+  <figcaption>Saldi Conti: totali e saldo di ogni conto, con la verifica della quadratura.</figcaption>
+</figure>
+
+<figure class="figura">
+  <img class="esempio" src="{{ '/assets/schermate/04-scelta-conti.png' | relative_url }}" alt="Scelta dei conti da esportare con caselle di spunta e intervallo di codici" width="420">
+  <figcaption>Scelta dei conti da esportare: tutti, solo costi e ricavi, o quelli spuntati.</figcaption>
+</figure>
 
 ## Report
 
