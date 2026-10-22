@@ -1,6 +1,6 @@
 # Changelog
 
-## Non ancora rilasciato
+## 2.0 – 2026-10-22
 
 - **Gestione IVA** (modulo facoltativo): registri sezionali configurabili (vendite, acquisti, corrispettivi), fatture e note di credito, corrispettivi con scorporo, reverse charge con integrazione nel registro vendite, IVA indetraibile per riga; protocollo per registro e anno; stampa dei registri per mese, trimestre o anno con riepilogo per aliquota; liquidazione mensile o trimestrale con interessi dell'1%, credito riportato, minimo di 25,82 euro, acconto e giroconto su Erario c/IVA.
 - **Bilancio civilistico** (modulo facoltativo): schemi ordinario (artt. 2424-2425 c.c.), abbreviato (art. 2435-bis) e micro-imprese (art. 2435-ter), confronto con l'esercizio precedente, unità di euro, controlli (quadratura, conti non collegati, saldi opposti, scritture di chiusura); collegamento facoltativo dei conti alle voci con proposte automatiche.
