@@ -24,6 +24,12 @@ jobs:
         with:
           python-version: "3.12"
 
+      # Schermo da portatile (1920x1080): il runner parte da 1024x768
+      - name: Risoluzione dello schermo
+        continue-on-error: true
+        shell: powershell
+        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
+
       - name: Installa dipendenze
         run: pip install -r requirements.txt pillow
 

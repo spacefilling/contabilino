@@ -181,9 +181,9 @@ class MainWindow:
 
         self.giornale_tree.column("numero", width=px(50), anchor=tk.CENTER, stretch=False)
         self.giornale_tree.column("data", width=px(100), anchor=tk.CENTER, stretch=False)
-        self.giornale_tree.column("causale", width=px(260))
-        self.giornale_tree.column("dare", width=px(200))
-        self.giornale_tree.column("avere", width=px(200))
+        self.giornale_tree.column("causale", width=px(210))
+        self.giornale_tree.column("dare", width=px(170))
+        self.giornale_tree.column("avere", width=px(170))
         self.giornale_tree.column("importo", width=px(110), anchor=tk.E, stretch=False)
 
         scrollbar = ttk.Scrollbar(tree_frame, orient=tk.VERTICAL, command=self.giornale_tree.yview)
@@ -237,19 +237,19 @@ class MainWindow:
                 row=0, column=col, padx=px(3), pady=(0, px(3)), sticky=tk.W
             )
 
-        self._input_data = SmartDateEntry(input_frame, width=12)
+        self._input_data = SmartDateEntry(input_frame, width=11)
         self._input_data.grid(row=1, column=0, padx=px(3), sticky=tk.W + tk.E)
 
-        self._input_causale = AutocompleteEntry(input_frame, values=[], allow_free_text=True, width=25)
+        self._input_causale = AutocompleteEntry(input_frame, values=[], allow_free_text=True, width=20)
         self._input_causale.grid(row=1, column=1, padx=px(3), sticky=tk.W + tk.E)
 
-        self._input_dare = AutocompleteEntry(input_frame, values=self._conti_labels, width=22)
+        self._input_dare = AutocompleteEntry(input_frame, values=self._conti_labels, width=18)
         self._input_dare.grid(row=1, column=2, padx=px(3), sticky=tk.W + tk.E)
 
-        self._input_avere = AutocompleteEntry(input_frame, values=self._conti_labels, width=22)
+        self._input_avere = AutocompleteEntry(input_frame, values=self._conti_labels, width=18)
         self._input_avere.grid(row=1, column=3, padx=px(3), sticky=tk.W + tk.E)
 
-        self._input_importo = AmountEntry(input_frame, width=12)
+        self._input_importo = AmountEntry(input_frame, width=11)
         self._input_importo.grid(row=1, column=4, padx=px(3), sticky=tk.W + tk.E)
 
         # Enter sull'importo → salva
@@ -417,7 +417,7 @@ class MainWindow:
         self.saldi_tree.heading("saldo", text="Saldo")
 
         self.saldi_tree.column("codice", width=px(80), anchor=tk.CENTER, stretch=False)
-        self.saldi_tree.column("nome", width=px(280))
+        self.saldi_tree.column("nome", width=px(240))
         self.saldi_tree.column("tipo", width=px(90), anchor=tk.CENTER, stretch=False)
         self.saldi_tree.column("dare", width=px(130), anchor=tk.E, stretch=False)
         self.saldi_tree.column("avere", width=px(130), anchor=tk.E, stretch=False)
