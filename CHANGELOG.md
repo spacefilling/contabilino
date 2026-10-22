@@ -1,5 +1,15 @@
 # Changelog
 
+## Non ancora rilasciato
+
+- **Interfaccia molto più veloce**: il tema Sun Valley della 1.5 rallentava ogni clic (circa 70 ms per selezionare una riga); lo stile Windows 11 ora è disegnato direttamente, con tempi di risposta 7-8 volte più bassi.
+- **Nuova scheda Partitari**: si sceglie un conto e se ne vedono i movimenti con saldo progressivo; per un conto padre, anche quelli dei sottoconti. Doppio clic su un movimento per aprirlo nel Libro Giornale; export del partitario in CSV, Excel e PDF.
+- **Saldi Conti ad albero**: i sottoconti stanno dentro il conto padre, che riporta il totale del gruppo; gruppi da aprire e chiudere. Doppio clic su un conto per aprirne il partitario. Anche l'export dei saldi riporta i totali di gruppo.
+- **Piano dei conti ad albero**: codice e nome rientrati sotto il conto padre, numero di sottoconti, doppio clic per modificare.
+- Scelta dei conti da esportare ad albero.
+- Icona della finestra e della barra delle applicazioni dal file `.ico` (metodo nativo di Windows), anche nelle finestre di avvio.
+- Eseguibile con informazioni di versione: descrizione, versione e copyright di spacefiller in Proprietà → Dettagli.
+
 ## 1.5 – 2026-10-22
 
 - Aspetto in stile Windows 11 (tema Sun Valley, font Segoe UI, pulsanti principali in evidenza) e intestazione con logo ed esercizio attivo.

@@ -1,4 +1,3 @@
 openpyxl
 reportlab
-sv-ttk
 pyinstaller

@@ -59,7 +59,8 @@
      con i conti invertiti che annulla quella sbagliata.
    - Le registrazioni di un esercizio chiuso non si modificano e non si
      cancellano: si possono solo stornare.
-   - Scheda  Saldi Conti : vedi i totali.
+   - Scheda  Saldi Conti : vedi i totali, conti e sottoconti ad albero.
+   - Scheda  Partitari : scegli un conto e vedi tutti i suoi movimenti.
    - Menu  Export : salva in CSV, Excel o PDF il Libro Giornale,
      i Saldi Conti, il report Costi e Ricavi e i Partitari
      (fornitori, clienti, banca...).

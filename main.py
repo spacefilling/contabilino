@@ -24,6 +24,7 @@ def startup_dialog():
     """Mostra il dialogo iniziale per creare o aprire un database."""
     root = tk.Tk()
     root.withdraw()
+    tema.imposta_icona(root)  # anche le finestre di avvio hanno il logo
 
     base_dir = get_base_dir()
     default_db = os.path.join(base_dir, "contabilino.db")

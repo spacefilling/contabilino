@@ -11,7 +11,7 @@ INDICE
   6. Registrare un'operazione
   7. Gestione esercizi
   8. Piano dei conti (conti e sottoconti)
-  9. Saldi conti
+  9. Saldi conti e partitari
   10. Export CSV, Excel e PDF
   11. Scorciatoie da tastiera
   12. Portabilità (chiavetta USB)
@@ -38,11 +38,10 @@ Per eseguire dal sorgente Python:
   - Python 3.10 o superiore
   - openpyxl (per l'export Excel)
   - reportlab (per l'export PDF)
-  - sv-ttk (tema grafico in stile Windows 11)
 
 Installazione dipendenze:
 
-    pip install openpyxl reportlab sv-ttk
+    pip install openpyxl reportlab
 
 Tkinter è incluso in Python per Windows, non serve installarlo.
 
@@ -86,7 +85,7 @@ Oppure manualmente:
 
     pip install -r requirements.txt
     python strumenti\versione_exe.py
-    pyinstaller --onefile --windowed --name Contabilino --icon risorse\contabilino.ico --hidden-import openpyxl --collect-data sv_ttk --version-file versione_exe.txt main.py
+    pyinstaller --onefile --windowed --name Contabilino --icon risorse\contabilino.ico --hidden-import openpyxl --version-file versione_exe.txt --add-data "risorse\contabilino.ico;risorse" main.py
 
 L'eseguibile sarà in: dist\Contabilino.exe
 
@@ -312,6 +311,8 @@ SOTTOCONTI:
 
   Il tipo (ATTIVO/PASSIVO/COSTO/RICAVO) viene ereditato dal padre.
   I livelli sono due: un sottoconto non può avere a sua volta sottoconti.
+  Nella finestra i sottoconti stanno rientrati sotto il conto padre, che
+  si apre e si chiude con la freccia; doppio clic per modificare.
   I sottoconti appaiono indentati nei saldi e negli export.
 
 Note:
@@ -321,7 +322,7 @@ Note:
 
 
 ================================================================================
-9. SALDI CONTI
+9. SALDI CONTI E PARTITARI
 ================================================================================
 
 Scheda "Saldi Conti" nella finestra principale.
@@ -331,9 +332,21 @@ Mostra per ogni conto:
   - Totale Avere
   - Saldo (Dare - Avere)
 
-I sottoconti sono indentati sotto il conto padre.
+I conti sono mostrati ad albero: un conto con sottoconti riporta in
+grassetto il totale del gruppo e si apre o si chiude con la freccia
+(pulsanti "Espandi tutto" e "Comprimi tutto"). I movimenti registrati
+direttamente sul conto padre hanno una riga a parte.
 In fondo alla tabella: totali generali e verifica quadratura
 (il totale Dare deve essere uguale al totale Avere).
+Doppio clic su un conto: apre il suo partitario.
+
+SCHEDA PARTITARI
+  Scrivi o scegli un conto: compaiono i suoi movimenti dell'esercizio
+  con data, numero, causale, contropartita, Dare, Avere e saldo
+  progressivo. Per un conto padre compaiono anche i movimenti dei
+  sottoconti. Doppio clic su un movimento: apre la registrazione nel
+  Libro Giornale. Il pulsante Esporta salva il partitario in CSV,
+  Excel o PDF.
 
 
 ================================================================================

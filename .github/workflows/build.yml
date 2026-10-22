@@ -31,7 +31,7 @@ jobs:
         run: python strumenti/versione_exe.py
 
       - name: Compila l'eseguibile
-        run: pyinstaller --onefile --windowed --name Contabilino --icon risorse/contabilino.ico --hidden-import openpyxl --collect-data sv_ttk --version-file versione_exe.txt main.py
+        run: pyinstaller --onefile --windowed --name Contabilino --icon risorse/contabilino.ico --hidden-import openpyxl --version-file versione_exe.txt --add-data "risorse/contabilino.ico;risorse" main.py
 
       # L'exe è sempre scaricabile dalla pagina del run (tab Actions > artifacts),
       # anche per un semplice "Run workflow" senza pubblicare una versione.

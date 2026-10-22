@@ -1,7 +1,8 @@
 """
 Contabilino - Aspetto grafico
-Tema Sun Valley (stile Windows 11), testo nitido sugli schermi con lo zoom
-di Windows (125%, 150%...), icona della finestra e misure in pixel adattate.
+Stile Windows 11 (Fluent) disegnato sul tema "clam" di Tk: solo colori e
+linee, niente immagini, così l'interfaccia resta veloce. Testo nitido con lo
+zoom di Windows (125%, 150%...), icona della finestra e misure in pixel adattate.
 
 Uso:
     tema.abilita_dpi()          prima di creare la prima finestra Tk
@@ -20,13 +21,19 @@ from icona import ICONE, SPUNTE
 SCALA = 1.0  # rapporto tra i DPI dello schermo e 96 (zoom di Windows al 100%)
 
 # Colori del tema chiaro (Fluent / Windows 11)
-SFONDO = "#fafafa"
+SFONDO = "#f7f7f7"
 SFONDO_CARD = "#ffffff"
+SFONDO_HOVER = "#f2f2f2"
+SFONDO_PREMUTO = "#e9e9e9"
 TESTO = "#1c1c1c"
-TESTO_SECONDARIO = "#5f5f5f"
+TESTO_SECONDARIO = "#616161"
+TESTO_DISATTIVO = "#a0a0a0"
 BORDO = "#e5e5e5"
+BORDO_CONTROLLO = "#d1d1d1"
 ACCENTO = "#005fb8"
-SELEZIONE_LISTA = "#e8eef8"
+ACCENTO_HOVER = "#1a6fc0"
+ACCENTO_PREMUTO = "#004c94"
+SELEZIONE_LISTA = "#e3ecf7"
 ERRORE = "#c42b1c"
 
 # Font con nome, definiti in applica(): si usano come font="Contabilino.Titolo"
@@ -79,15 +86,9 @@ def applica(root):
     if sys.platform == "win32" or zoom_prova:
         SCALA = max(1.0, root.winfo_fpixels("1i") / 96)
 
-    try:
-        import sv_ttk
-        sv_ttk.set_theme("light", root)
-    except Exception:
-        pass  # senza il tema resta l'aspetto standard di Tk
-
     _crea_font(root)
     _stili(root)
-    _imposta_icona(root)
+    imposta_icona(root)
     root.configure(background=SFONDO)
     # Colori di base per i widget tk classici (elenchi, menu a comparsa)
     root.option_add("*Listbox.font", FONT_TESTO)
@@ -104,10 +105,7 @@ def _famiglia(root):
 
 
 def _crea_font(root):
-    """
-    Font in punti (non in pixel), così crescono con lo zoom di Windows.
-    Anche i font del tema Sun Valley, definiti in pixel, passano in punti.
-    """
+    """Font in punti (non in pixel), così crescono con lo zoom di Windows."""
     famiglia = _famiglia(root)
     titolo = "Segoe UI Variable Display" if famiglia == "Segoe UI Variable Text" else famiglia
     definizioni = {
@@ -123,22 +121,139 @@ def _crea_font(root):
         else:
             _font.append(tkfont.Font(root, name=nome, **opzioni))
 
-    sun_valley = {
-        "SunValleyCaptionFont": 9, "SunValleyBodyFont": 10, "SunValleyBodyStrongFont": 10,
-        "SunValleyBodyLargeFont": 13, "SunValleySubtitleFont": 15, "SunValleyTitleFont": 21,
-    }
-    for nome, punti in sun_valley.items():
-        if nome in tkfont.names(root):
-            tkfont.nametofont(nome, root).configure(family=famiglia, size=punti)
     for nome in ("TkDefaultFont", "TkTextFont", "TkMenuFont", "TkHeadingFont"):
         tkfont.nametofont(nome, root).configure(family=famiglia, size=10)
 
 
 def _stili(root):
+    """
+    Stile Fluent sul tema "clam": elementi disegnati con colori e linee
+    (i temi fatti di immagini, come Sun Valley, rallentano ogni clic).
+    """
     style = ttk.Style(root)
+    style.theme_use("clam")
     linea = tkfont.nametofont(FONT_TESTO, root).metrics("linespace")
-    style.configure("Treeview", rowheight=linea + px(10), font=FONT_TESTO)
-    style.configure("Treeview.Heading", font=FONT_PICCOLO)
+
+    style.configure(
+        ".", background=SFONDO, foreground=TESTO, font=FONT_TESTO,
+        bordercolor=BORDO_CONTROLLO, lightcolor=SFONDO, darkcolor=SFONDO,
+        troughcolor=SFONDO, focuscolor=SFONDO, selectbackground=SELEZIONE_LISTA,
+        selectforeground=TESTO, fieldbackground=SFONDO_CARD, insertcolor=TESTO,
+    )
+    style.map(".", foreground=[("disabled", TESTO_DISATTIVO)])
+
+    # Pulsanti: bianchi con bordo sottile; "Accent" blu per l'azione principale
+    style.configure(
+        "TButton", background=SFONDO_CARD, bordercolor=BORDO_CONTROLLO,
+        lightcolor=SFONDO_CARD, darkcolor=SFONDO_CARD, padding=(px(12), px(5)),
+        anchor="center", focuscolor=SFONDO_CARD,
+    )
+    style.map(
+        "TButton",
+        background=[("disabled", SFONDO), ("pressed", SFONDO_PREMUTO), ("active", SFONDO_HOVER)],
+        lightcolor=[("disabled", SFONDO), ("pressed", SFONDO_PREMUTO), ("active", SFONDO_HOVER)],
+        darkcolor=[("disabled", SFONDO), ("pressed", SFONDO_PREMUTO), ("active", SFONDO_HOVER)],
+        bordercolor=[("disabled", BORDO), ("focus", ACCENTO)],
+        focuscolor=[("pressed", SFONDO_PREMUTO), ("active", SFONDO_HOVER)],
+    )
+    style.configure(
+        "Accent.TButton", background=ACCENTO, foreground="#ffffff", bordercolor=ACCENTO,
+        lightcolor=ACCENTO, darkcolor=ACCENTO, focuscolor=ACCENTO,
+    )
+    style.map(
+        "Accent.TButton",
+        background=[("disabled", "#9fb8d6"), ("pressed", ACCENTO_PREMUTO), ("active", ACCENTO_HOVER)],
+        lightcolor=[("disabled", "#9fb8d6"), ("pressed", ACCENTO_PREMUTO), ("active", ACCENTO_HOVER)],
+        darkcolor=[("disabled", "#9fb8d6"), ("pressed", ACCENTO_PREMUTO), ("active", ACCENTO_HOVER)],
+        bordercolor=[("disabled", "#9fb8d6"), ("pressed", ACCENTO_PREMUTO), ("active", ACCENTO_HOVER)],
+        focuscolor=[("pressed", ACCENTO_PREMUTO), ("active", ACCENTO_HOVER)],
+        foreground=[("disabled", "#ffffff")],
+    )
+
+    # Campi di testo e tendine: bianchi, bordo grigio, blu quando hanno il focus
+    for nome in ("TEntry", "TCombobox", "TSpinbox"):
+        style.configure(
+            nome, fieldbackground=SFONDO_CARD, background=SFONDO_CARD,
+            bordercolor=BORDO_CONTROLLO, lightcolor=SFONDO_CARD, darkcolor=SFONDO_CARD,
+            padding=(px(6), px(4)), arrowcolor=TESTO_SECONDARIO, arrowsize=px(12),
+        )
+        style.map(
+            nome,
+            bordercolor=[("focus", ACCENTO)],
+            lightcolor=[("focus", SFONDO_CARD)],
+            fieldbackground=[("readonly", SFONDO_CARD), ("disabled", SFONDO)],
+            selectbackground=[("readonly", SFONDO_CARD)],
+            selectforeground=[("readonly", TESTO)],
+            background=[("active", SFONDO_HOVER), ("pressed", SFONDO_PREMUTO)],
+        )
+    # Elenco a comparsa delle combobox
+    root.option_add("*TCombobox*Listbox.background", SFONDO_CARD)
+    root.option_add("*TCombobox*Listbox.foreground", TESTO)
+    root.option_add("*TCombobox*Listbox.selectBackground", SELEZIONE_LISTA)
+    root.option_add("*TCombobox*Listbox.selectForeground", TESTO)
+    root.option_add("*TCombobox*Listbox.font", FONT_TESTO)
+    root.option_add("*TCombobox*Listbox.borderWidth", 0)
+
+    # Pulsanti radio e caselle
+    for nome in ("TRadiobutton", "TCheckbutton"):
+        style.configure(
+            nome, background=SFONDO, indicatorbackground=SFONDO_CARD,
+            indicatorforeground=SFONDO_CARD, indicatormargin=(0, 0, px(6), 0),
+            focuscolor=SFONDO, padding=(0, px(2)),
+        )
+        style.map(
+            nome,
+            background=[("active", SFONDO)],
+            indicatorbackground=[("selected", ACCENTO), ("active", SFONDO_HOVER)],
+            indicatorforeground=[("selected", "#ffffff")],
+        )
+
+    # Schede
+    style.configure("TNotebook", background=SFONDO, bordercolor=BORDO, lightcolor=SFONDO, darkcolor=SFONDO,
+                    tabmargins=(0, 0, 0, 0))
+    style.configure(
+        "TNotebook.Tab", background=SFONDO, foreground=TESTO_SECONDARIO, bordercolor=BORDO,
+        lightcolor=SFONDO, darkcolor=SFONDO, padding=(px(16), px(7)), focuscolor=SFONDO,
+    )
+    style.map(
+        "TNotebook.Tab",
+        background=[("selected", SFONDO_CARD), ("active", SFONDO_HOVER)],
+        lightcolor=[("selected", SFONDO_CARD)],
+        foreground=[("selected", TESTO)],
+        expand=[("selected", (0, 0, 0, 0))],
+    )
+
+    # Tabelle: bianche, intestazione piatta, selezione azzurra
+    style.configure(
+        "Treeview", background=SFONDO_CARD, fieldbackground=SFONDO_CARD, foreground=TESTO,
+        bordercolor=BORDO, lightcolor=SFONDO_CARD, darkcolor=SFONDO_CARD,
+        rowheight=linea + px(10), font=FONT_TESTO, indent=px(18),
+    )
+    style.map("Treeview", background=[("selected", SELEZIONE_LISTA)], foreground=[("selected", TESTO)])
+    style.configure(
+        "Treeview.Heading", background=SFONDO_CARD, foreground=TESTO_SECONDARIO, font=FONT_PICCOLO,
+        bordercolor=BORDO, lightcolor=SFONDO_CARD, darkcolor=SFONDO_CARD, relief="flat",
+        padding=(px(6), px(5)),
+    )
+    style.map("Treeview.Heading", background=[("active", SFONDO_HOVER)], lightcolor=[("active", SFONDO_HOVER)])
+
+    # Barre di scorrimento sottili
+    for nome in ("Vertical.TScrollbar", "Horizontal.TScrollbar"):
+        style.configure(
+            nome, background="#e2e2e2", troughcolor=SFONDO_CARD, bordercolor=SFONDO_CARD,
+            lightcolor="#e2e2e2", darkcolor="#e2e2e2", arrowcolor=TESTO_SECONDARIO,
+            arrowsize=px(12), gripcount=0,
+        )
+        style.map(nome, background=[("active", "#cfcfcf"), ("pressed", "#bdbdbd")],
+                  lightcolor=[("active", "#cfcfcf")], darkcolor=[("active", "#cfcfcf")])
+
+    # Riquadri e separatori
+    style.configure("TLabelframe", background=SFONDO, bordercolor=BORDO, lightcolor=SFONDO, darkcolor=SFONDO,
+                    relief="solid", borderwidth=1)
+    style.configure("TLabelframe.Label", background=SFONDO, foreground=TESTO_SECONDARIO, font=FONT_PICCOLO)
+    style.configure("TSeparator", background=BORDO)
+
+    # Etichette
     style.configure("Titolo.TLabel", font=FONT_TITOLO)
     style.configure("Sottotitolo.TLabel", font=FONT_SOTTOTITOLO)
     style.configure("Forte.TLabel", font=FONT_FORTE)
@@ -146,18 +261,35 @@ def _stili(root):
     style.configure("Nota.TLabel", foreground=TESTO_SECONDARIO)
     style.configure("Errore.TLabel", foreground=ERRORE)
     style.configure("Stato.TLabel", font=FONT_PICCOLO, foreground=TESTO_SECONDARIO, padding=(px(12), px(6)))
-    style.configure("TNotebook.Tab", padding=(px(14), px(6)))
 
 
-def _imposta_icona(root):
-    """Logo nella barra del titolo e nella barra delle applicazioni (anche per i dialoghi)."""
+def percorso_risorsa(relativo):
+    """Percorso di un file del progetto, anche dentro l'eseguibile (PyInstaller lo estrae in _MEIPASS)."""
+    base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, relativo)
+
+
+def imposta_icona(root):
+    """
+    Logo nella barra del titolo e nella barra delle applicazioni, per questa
+    finestra e per tutte quelle che si apriranno dopo (dialoghi compresi).
+    Su Windows usa il file .ico con tutte le misure (il metodo nativo, il più
+    affidabile); altrove, o se il file manca, le immagini PNG incorporate.
+    """
     try:
         immagini = [tk.PhotoImage(master=root, data=dati)
                     for _misura, dati in sorted(ICONE.items(), reverse=True)]
+        _icone.extend(immagini)
+        root.iconphoto(True, *immagini)
     except tk.TclError:
-        return
-    _icone.extend(immagini)
-    root.iconphoto(True, *immagini)
+        pass
+    ico = percorso_risorsa(os.path.join("risorse", "contabilino.ico"))
+    if sys.platform == "win32" and os.path.exists(ico):
+        try:
+            root.iconbitmap(ico)
+            root.iconbitmap(default=ico)
+        except tk.TclError:
+            pass
 
 
 def logo(root, misura=32):

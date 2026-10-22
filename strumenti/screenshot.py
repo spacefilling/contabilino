@@ -83,6 +83,8 @@ def main():
     root.attributes("-topmost", True)
     root.focus_force()
 
+    controlli.append(("icona .ico della finestra impostata", "contabilino.ico" in str(root.wm_iconbitmap())))
+
     # 1. Libro giornale con una registrazione selezionata
     righe = w.giornale_tree.get_children()
     w.giornale_tree.selection_set(righe[5])
@@ -110,9 +112,12 @@ def main():
     controlli.append(("tendina chiusa con un clic sulla tabella", w._input_dare._popup is None))
     w._clear_input_row()
 
-    # 4. Saldi conti
+    # 4. Saldi conti (albero dei conti e sottoconti) e partitario di un fornitore
     w.notebook.select(1)
     foto(root, "03-saldi-conti")
+    conti = {c["codice"]: c["id"] for c in db.get_conti()}
+    w._apri_partitario(str(conti["401"]))
+    foto(root, "04-partitari")
     w.notebook.select(0)
 
     # 5. Dialoghi
@@ -129,14 +134,14 @@ def main():
         d._spunta_intervallo()
         return d
 
-    dialogo(scelta_conti, "04-scelta-conti")
-    dialogo(lambda: dialogs.RiportoSaldiDialog(root, db, nuovo, vecchio), "05-riporto-saldi")
-    dialogo(lambda: dialogs.GestioneContiDialog(root, db), "06-piano-dei-conti")
-    dialogo(lambda: dialogs.GestioneEserciziDialog(root, db, vecchio), "07-esercizi")
+    dialogo(scelta_conti, "05-scelta-conti")
+    dialogo(lambda: dialogs.RiportoSaldiDialog(root, db, nuovo, vecchio), "06-riporto-saldi")
+    dialogo(lambda: dialogs.GestioneContiDialog(root, db), "07-piano-dei-conti")
+    dialogo(lambda: dialogs.GestioneEserciziDialog(root, db, vecchio), "08-esercizi")
 
     # 6. Schermo intero: barra delle applicazioni con l'icona
     from PIL import ImageGrab
-    ImageGrab.grab(all_screens=True).save(os.path.join(USCITA, "08-schermo-intero.png"))
+    ImageGrab.grab(all_screens=True).save(os.path.join(USCITA, "09-schermo-intero.png"))
 
     root.destroy()
     with open(os.path.join(USCITA, "controlli.txt"), "w", encoding="utf-8") as f:

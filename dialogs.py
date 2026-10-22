@@ -392,17 +392,19 @@ class GestioneContiDialog(tk.Toplevel):
         frame = ttk.Frame(self, padding=px(10))
         frame.pack(fill=tk.BOTH, expand=True)
 
-        # Treeview ad albero: mostra gerarchia conti/sottoconti
-        cols = ("codice", "nome", "tipo")
-        self.tree = ttk.Treeview(frame, columns=cols, show="tree headings", height=14)
-        self.tree.heading("#0", text="")
-        self.tree.heading("codice", text="Codice")
-        self.tree.heading("nome", text="Nome")
+        # Albero: codice e nome nella colonna della gerarchia, così i sottoconti
+        # stanno rientrati sotto il loro conto padre, che si apre e si chiude
+        cols = ("tipo", "sottoconti")
+        self.tree = ttk.Treeview(frame, columns=cols, show="tree headings", height=16, selectmode="browse")
+        self.tree.heading("#0", text="Conto", anchor=tk.W)
         self.tree.heading("tipo", text="Tipo")
-        self.tree.column("#0", width=px(30), stretch=False)
-        self.tree.column("codice", width=px(70), anchor=tk.CENTER)
-        self.tree.column("nome", width=px(270))
-        self.tree.column("tipo", width=px(100), anchor=tk.CENTER)
+        self.tree.heading("sottoconti", text="Sottoconti")
+        self.tree.column("#0", width=px(340), minwidth=px(220))
+        self.tree.column("tipo", width=px(100), anchor=tk.CENTER, stretch=False)
+        self.tree.column("sottoconti", width=px(90), anchor=tk.CENTER, stretch=False)
+        self.tree.tag_configure("padre", font=tema.FONT_FORTE)
+        self.tree.bind("<Double-Button-1>", self._on_doppio_clic)
+        self.tree.bind("<Return>", lambda e: self._on_modifica())
 
         scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=self.tree.yview)
         self.tree.configure(yscrollcommand=scrollbar.set)
@@ -417,23 +419,32 @@ class GestioneContiDialog(tk.Toplevel):
         ttk.Button(btn_frame, text="Elimina", command=self._on_elimina).pack(side=tk.LEFT, padx=3)
         ttk.Button(btn_frame, text="Chiudi", command=self.destroy).pack(side=tk.RIGHT, padx=3)
 
-    def _refresh_list(self):
-        for item in self.tree.get_children():
-            self.tree.delete(item)
+    def _refresh_list(self, seleziona=None):
+        """Ricostruisce l'albero mantenendo la selezione e i gruppi chiusi."""
+        chiusi = {i for i in self.tree.get_children() if not self.tree.item(i, "open")}
+        selezionato = seleziona or (self.tree.selection() or [None])[0]
+        self.tree.delete(*self.tree.get_children())
 
-        # Inserisci prima i conti padre, poi i sottoconti come figli nel treeview
-        padri = self.db.get_conti_padri()
-        for p in padri:
+        for p in self.db.get_conti_padri():
             pid = str(p["id"])
-            self.tree.insert("", tk.END, iid=pid,
-                             values=(p["codice"], p["nome"], p["tipo"]))
             sottoconti = self.db.get_sottoconti(p["id"])
+            self.tree.insert("", tk.END, iid=pid, text=f"{p['codice']}   {p['nome']}",
+                             open=pid not in chiusi, tags=("padre",) if sottoconti else (),
+                             values=(p["tipo"], len(sottoconti) or ""))
             for s in sottoconti:
-                self.tree.insert(pid, tk.END, iid=str(s["id"]),
-                                 values=(s["codice"], s["nome"], s["tipo"]))
-            # Espandi i padri che hanno figli
-            if sottoconti:
-                self.tree.item(pid, open=True)
+                self.tree.insert(pid, tk.END, iid=str(s["id"]), text=f"{s['codice']}   {s['nome']}",
+                                 values=(s["tipo"], ""))
+
+        if selezionato and self.tree.exists(str(selezionato)):
+            self.tree.see(str(selezionato))
+            self.tree.selection_set(str(selezionato))
+            self.tree.focus(str(selezionato))
+
+    def _on_doppio_clic(self, event):
+        if self.tree.identify_region(event.x, event.y) in ("cell", "tree") and \
+                "indicator" not in self.tree.identify_element(event.x, event.y):
+            self._on_modifica()
+            return "break"
 
     def _get_selected_id(self):
         sel = self.tree.selection()
@@ -449,8 +460,7 @@ class GestioneContiDialog(tk.Toplevel):
         if dlg.result:
             codice, nome, tipo, padre_id = dlg.result
             try:
-                self.db.crea_conto(codice, nome, tipo, padre_id)
-                self._refresh_list()
+                self._refresh_list(seleziona=self.db.crea_conto(codice, nome, tipo, padre_id))
             except Exception as e:
                 messagebox.showerror("Errore", str(e), parent=self)
 
@@ -469,8 +479,7 @@ class GestioneContiDialog(tk.Toplevel):
         if dlg.result:
             codice, nome, tipo, pid = dlg.result
             try:
-                self.db.crea_conto(codice, nome, tipo, pid)
-                self._refresh_list()
+                self._refresh_list(seleziona=self.db.crea_conto(codice, nome, tipo, pid))
             except Exception as e:
                 messagebox.showerror("Errore", str(e), parent=self)
 
@@ -1000,7 +1009,7 @@ class SelezioneContiDialog(tk.Toplevel):
         self.tree.heading("codice", text="Codice")
         self.tree.heading("nome", text="Conto")
         self.tree.heading("tipo", text="Tipo")
-        self.tree.column("#0", width=px(40), minwidth=px(40), stretch=False)
+        self.tree.column("#0", width=px(76), minwidth=px(76), stretch=False)
         self.tree.column("codice", width=px(70), anchor=tk.CENTER, stretch=False)
         self.tree.column("nome", width=px(260))
         self.tree.column("tipo", width=px(80), anchor=tk.CENTER, stretch=False)
@@ -1035,16 +1044,42 @@ class SelezioneContiDialog(tk.Toplevel):
         btn_ok.focus_set()
 
     def _popola(self):
-        """Riempie l'elenco con i conti che corrispondono alla ricerca."""
+        """
+        Riempie l'elenco ad albero con i conti che corrispondono alla ricerca:
+        i sottoconti stanno sotto il loro padre, che compare anche se la ricerca
+        trova solo un suo sottoconto.
+        """
         testo = self._cerca_var.get().strip().lower()
         self.tree.delete(*self.tree.get_children())
+
+        def trovato(c):
+            return not testo or testo in c["codice"].lower() or testo in c["nome"].lower()
+
+        ids = {c["id"] for c in self._conti}
+        figli = {}
         for c in self._conti:
-            if testo and testo not in c["codice"].lower() and testo not in c["nome"].lower():
+            if c["padre_id"] in ids:
+                figli.setdefault(c["padre_id"], []).append(c)
+        for c in self._conti:
+            if c["padre_id"] in ids:
                 continue
-            nome = ("    " + c["nome"]) if c["padre_id"] else c["nome"]
-            self.tree.insert("", tk.END, iid=str(c["id"]), image=self._segno(c["id"]),
-                             values=(c["codice"], nome, c["tipo"]))
+            sotto = [f for f in figli.get(c["id"], []) if trovato(f)]
+            if not trovato(c) and not sotto:
+                continue
+            padre = self.tree.insert("", tk.END, iid=str(c["id"]), image=self._segno(c["id"]), open=True,
+                                     values=(c["codice"], c["nome"], c["tipo"]))
+            for f in sotto:
+                self.tree.insert(padre, tk.END, iid=str(f["id"]), image=self._segno(f["id"]),
+                                 values=(f["codice"], f["nome"], f["tipo"]))
         self._aggiorna_conteggio()
+
+    def _righe_visibili(self):
+        """Tutte le righe dell'elenco, sottoconti compresi."""
+        righe = []
+        for item in self.tree.get_children():
+            righe.append(item)
+            righe.extend(self.tree.get_children(item))
+        return righe
 
     def _segno(self, conto_id):
         vuota, piena = self._immagini_spunta
@@ -1065,6 +1100,8 @@ class SelezioneContiDialog(tk.Toplevel):
 
     def _on_clic(self, event):
         riga = self.tree.identify_row(event.y)
+        if "indicator" in self.tree.identify_element(event.x, event.y):
+            return  # clic sulla freccia: apre o chiude il gruppo, senza spuntare
         if riga and self.tree.identify_region(event.x, event.y) in ("cell", "tree"):
             self.tree.focus(riga)
             self.tree.selection_set(riga)
@@ -1102,7 +1139,7 @@ class SelezioneContiDialog(tk.Toplevel):
         self._aggiorna(ids)
 
     def _spunta_visibili(self):
-        ids = [int(i) for i in self.tree.get_children()]
+        ids = [int(i) for i in self._righe_visibili()]
         self._spuntati.update(ids)
         self._aggiorna(ids)
 

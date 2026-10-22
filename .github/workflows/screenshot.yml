@@ -38,19 +38,26 @@ jobs:
           CONTABILINO_ZOOM: ${{ matrix.zoom }}
         run: python strumenti/screenshot.py screenshot-${{ matrix.zoom }}
 
+      - name: Tempi di risposta dell'interfaccia
+        env:
+          CONTABILINO_ZOOM: ${{ matrix.zoom }}
+        run: |
+          python strumenti/misura_reattivita.py > screenshot-${{ matrix.zoom }}/tempi.txt
+          type screenshot-${{ matrix.zoom }}\tempi.txt
+
       # Prova dell'eseguibile: tema e icona devono esserci anche nell'.exe
       - name: Compila e avvia l'eseguibile
         if: matrix.zoom == '100'
         shell: powershell
         run: |
           python strumenti/versione_exe.py
-          pyinstaller --onefile --windowed --name Contabilino --icon risorse/contabilino.ico --hidden-import openpyxl --collect-data sv_ttk --version-file versione_exe.txt main.py
+          pyinstaller --onefile --windowed --name Contabilino --icon risorse/contabilino.ico --hidden-import openpyxl --version-file versione_exe.txt --add-data "risorse/contabilino.ico;risorse" main.py
           Copy-Item esempi/contabilino-esempio.db dist/contabilino.db
           Start-Process explorer.exe (Resolve-Path dist)
           Start-Sleep -Seconds 4
           $app = Start-Process -FilePath dist/Contabilino.exe -WorkingDirectory dist -PassThru
           Start-Sleep -Seconds 12
-          python -c "from PIL import ImageGrab; ImageGrab.grab(all_screens=True).save('screenshot-100/09-eseguibile.png')"
+          python -c "from PIL import ImageGrab; ImageGrab.grab(all_screens=True).save('screenshot-100/10-eseguibile.png')"
           Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue
 
       - name: Carica le immagini

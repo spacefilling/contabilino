@@ -20,7 +20,7 @@ from dialogs import (
 import tema
 from tema import px
 from widgets import SmartDateEntry, AmountEntry, AutocompleteEntry, format_importo
-from export import FORMATI, conti_economici, crea_report, salva_report
+from export import FORMATI, SEGNO_SALDO, conti_economici, crea_report, movimenti_partitario, salva_report
 from version import MANUALE, REPOSITORY, VERSIONE
 from dateutils import (
     data_in_periodo,
@@ -84,6 +84,8 @@ class MainWindow:
         if hasattr(self, "_input_dare"):
             self._input_dare.set_values(self._conti_labels)
             self._input_avere.set_values(self._conti_labels)
+        if hasattr(self, "_partitario_conto"):
+            self._partitario_conto.set_values(self._conti_labels)
 
     def _refresh_causali_cache(self):
         causali = self.db.get_causali_usate(self.esercizio_id)
@@ -163,6 +165,10 @@ class MainWindow:
         self.saldi_frame = ttk.Frame(self.notebook)
         self.notebook.add(self.saldi_frame, text="Saldi Conti")
         self._build_saldi_tab()
+
+        self.partitario_frame = ttk.Frame(self.notebook)
+        self.notebook.add(self.partitario_frame, text="Partitari")
+        self._build_partitario_tab()
 
         self.notebook.bind("<<NotebookTabChanged>>", self._on_tab_changed)
 
@@ -407,17 +413,16 @@ class MainWindow:
         tree_frame = ttk.Frame(self.saldi_frame)
         tree_frame.pack(fill=tk.BOTH, expand=True, padx=px(12), pady=(px(12), px(6)))
 
-        cols = ("codice", "nome", "tipo", "dare", "avere", "saldo")
-        self.saldi_tree = ttk.Treeview(tree_frame, columns=cols, show="headings")
-        self.saldi_tree.heading("codice", text="Codice")
-        self.saldi_tree.heading("nome", text="Conto")
+        # Albero: i sottoconti stanno dentro il loro conto padre, che si apre e si chiude
+        cols = ("tipo", "dare", "avere", "saldo")
+        self.saldi_tree = ttk.Treeview(tree_frame, columns=cols, show="tree headings")
+        self.saldi_tree.heading("#0", text="Conto", anchor=tk.W)
         self.saldi_tree.heading("tipo", text="Tipo")
         self.saldi_tree.heading("dare", text="Tot. Dare")
         self.saldi_tree.heading("avere", text="Tot. Avere")
         self.saldi_tree.heading("saldo", text="Saldo")
 
-        self.saldi_tree.column("codice", width=px(80), anchor=tk.CENTER, stretch=False)
-        self.saldi_tree.column("nome", width=px(240))
+        self.saldi_tree.column("#0", width=px(330), minwidth=px(220))
         self.saldi_tree.column("tipo", width=px(90), anchor=tk.CENTER, stretch=False)
         self.saldi_tree.column("dare", width=px(130), anchor=tk.E, stretch=False)
         self.saldi_tree.column("avere", width=px(130), anchor=tk.E, stretch=False)
@@ -433,6 +438,167 @@ class MainWindow:
         self.totali_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=px(12), pady=(0, px(12)), before=tree_frame)
         self.totali_label = ttk.Label(self.totali_frame, text="", style="Forte.TLabel")
         self.totali_label.pack(side=tk.RIGHT)
+        ttk.Button(self.totali_frame, text="Espandi tutto",
+                   command=lambda: self._apri_gruppi_saldi(True)).pack(side=tk.LEFT)
+        ttk.Button(self.totali_frame, text="Comprimi tutto",
+                   command=lambda: self._apri_gruppi_saldi(False)).pack(side=tk.LEFT, padx=(px(6), 0))
+
+        self.saldi_tree.tag_configure("gruppo", font=tema.FONT_FORTE)
+        self.saldi_tree.tag_configure("diretto", foreground=tema.TESTO_SECONDARIO)
+        self._saldi_chiusi = set()  # conti padre chiusi dall'utente: restano chiusi quando i saldi si aggiornano
+        self.saldi_tree.bind("<Double-Button-1>", self._on_doppio_clic_saldi)
+        self.saldi_tree.bind("<Return>", lambda e: self._apri_partitario(self.saldi_tree.focus()))
+        self.saldi_tree.bind("<<TreeviewClose>>", lambda e: self._saldi_chiusi.add(self.saldi_tree.focus()))
+        self.saldi_tree.bind("<<TreeviewOpen>>", lambda e: self._saldi_chiusi.discard(self.saldi_tree.focus()))
+
+    def _apri_gruppi_saldi(self, aperti):
+        for item in self.saldi_tree.get_children():
+            if self.saldi_tree.get_children(item):
+                self.saldi_tree.item(item, open=aperti)
+        self._saldi_chiusi = set() if aperti else set(self.saldi_tree.get_children())
+
+    def _on_doppio_clic_saldi(self, event):
+        if self.saldi_tree.identify_region(event.x, event.y) in ("cell", "tree"):
+            self._apri_partitario(self.saldi_tree.identify_row(event.y))
+            return "break"  # niente apertura/chiusura del gruppo con il doppio clic
+
+    # --- Scheda Partitari ---
+
+    def _build_partitario_tab(self):
+        barra = ttk.Frame(self.partitario_frame)
+        barra.pack(fill=tk.X, padx=px(12), pady=(px(12), 0))
+        ttk.Label(barra, text="Conto", style="Secondario.TLabel").pack(side=tk.LEFT, padx=(0, px(8)))
+        self._partitario_conto = AutocompleteEntry(barra, values=self._conti_labels, width=34)
+        self._partitario_conto.pack(side=tk.LEFT)
+        self._partitario_conto._var.trace_add("write", lambda *a: self._on_conto_partitario())
+
+        esporta = ttk.Menubutton(barra, text="Esporta")
+        menu = tk.Menu(esporta, tearoff=0)
+        for formato, (nome_formato, _ext) in FORMATI.items():
+            menu.add_command(label=f"{nome_formato}...", command=lambda f=formato: self._esporta_partitario(f))
+        esporta["menu"] = menu
+        esporta.pack(side=tk.RIGHT)
+        self._partitario_info = ttk.Label(barra, text="", style="Secondario.TLabel")
+        self._partitario_info.pack(side=tk.LEFT, padx=(px(12), 0))
+
+        tree_frame = ttk.Frame(self.partitario_frame)
+        tree_frame.pack(fill=tk.BOTH, expand=True, padx=px(12), pady=(px(10), px(6)))
+        cols = ("data", "numero", "causale", "conto", "contropartita", "dare", "avere", "saldo")
+        self.partitario_tree = ttk.Treeview(tree_frame, columns=cols, show="headings", selectmode="browse")
+        for col, titolo, larghezza, allinea, allarga in (
+            ("data", "Data", 100, tk.CENTER, False), ("numero", "N.", 50, tk.CENTER, False),
+            ("causale", "Causale", 220, tk.W, True), ("conto", "Sottoconto", 170, tk.W, True),
+            ("contropartita", "Contropartita", 190, tk.W, True), ("dare", "Dare", 105, tk.E, False),
+            ("avere", "Avere", 105, tk.E, False), ("saldo", "Saldo", 115, tk.E, False),
+        ):
+            self.partitario_tree.heading(col, text=titolo)
+            self.partitario_tree.column(col, width=px(larghezza), anchor=allinea, stretch=allarga)
+        scrollbar = ttk.Scrollbar(tree_frame, orient=tk.VERTICAL, command=self.partitario_tree.yview)
+        self.partitario_tree.configure(yscrollcommand=scrollbar.set)
+        self.partitario_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.partitario_tree.tag_configure("apertura", foreground=tema.TESTO_SECONDARIO)
+        self.partitario_tree.bind("<Double-Button-1>", self._on_doppio_clic_partitario)
+        self.partitario_tree.bind("<Return>", lambda e: self._vai_a_registrazione(self.partitario_tree.focus()))
+
+        piede = ttk.Frame(self.partitario_frame)
+        piede.pack(side=tk.BOTTOM, fill=tk.X, padx=px(12), pady=(0, px(12)), before=tree_frame)
+        self._partitario_totali = ttk.Label(piede, text="", style="Forte.TLabel")
+        self._partitario_totali.pack(side=tk.RIGHT)
+        ttk.Label(piede, text="Doppio clic su un movimento per aprirlo nel Libro Giornale",
+                  style="Secondario.TLabel").pack(side=tk.LEFT)
+        self._partitario_conto_id = None
+
+    def _apri_partitario(self, conto_iid):
+        """Mostra nella scheda Partitari il conto indicato (iid = id del conto)."""
+        if not conto_iid or not conto_iid.isdigit():
+            return  # es. la riga "registrato direttamente sul conto"
+        conto = self.db.get_conto(int(conto_iid))
+        if not conto:
+            return
+        self._partitario_conto.set_value(f"{conto['codice']} - {conto['nome']}")
+        self.notebook.select(self.partitario_frame)
+
+    def _on_conto_partitario(self):
+        """Quando nel campo c'è un conto valido, mostra il suo partitario."""
+        conto_id = self._conti_map.get(self._partitario_conto.get_value())
+        if conto_id and conto_id != self._partitario_conto_id:
+            self._partitario_conto_id = conto_id
+            self._refresh_partitario()
+
+    def _conti_partitario(self):
+        """Il conto scelto e, se è un conto padre, i suoi sottoconti."""
+        if not self._partitario_conto_id:
+            return None, []
+        conto = self.db.get_conto(self._partitario_conto_id)
+        if not conto:
+            return None, []
+        return conto, [conto["id"]] + [s["id"] for s in self.db.get_sottoconti(conto["id"])]
+
+    def _refresh_partitario(self):
+        self.partitario_tree.delete(*self.partitario_tree.get_children())
+        conto, ids = self._conti_partitario()
+        if not conto or not self.esercizio_id:
+            self._partitario_info.config(text="Scegli un conto per vederne i movimenti")
+            self._partitario_totali.config(text="")
+            return
+        gruppo = len(ids) > 1
+        # La colonna Sottoconto serve solo per un conto padre con sottoconti
+        visibili = ["data", "numero", "causale"] + (["conto"] if gruppo else []) + \
+                   ["contropartita", "dare", "avere", "saldo"]
+        self.partitario_tree.configure(displaycolumns=visibili)
+
+        nomi = {c["id"]: f"{c['codice']} - {c['nome']}" for c in self.db.get_conti() if c["id"] in ids}
+        voci = []
+        for cid, movimenti in movimenti_partitario(self.db, self.esercizio_id, ids).items():
+            voci.extend((reg, cid, contro, dare, avere) for reg, contro, dare, avere in movimenti)
+        voci.sort(key=lambda v: (v[0]["data"], v[0]["numero"]))
+
+        segno = SEGNO_SALDO[conto["tipo"]]
+        saldo = tot_dare = tot_avere = 0
+        for reg, cid, contro, dare, avere in voci:
+            saldo += segno * (dare - avere)
+            tot_dare += dare
+            tot_avere += avere
+            self.partitario_tree.insert(
+                "", tk.END, iid=f"{reg['id']}-{cid}",
+                tags=("apertura",) if reg["descrizione"].startswith(self.db.CAUSALE_APERTURA) else (),
+                values=(format_date_display(reg["data"]), reg["numero"], reg["descrizione"], nomi.get(cid, ""),
+                        contro, format_importo(dare), format_importo(avere), format_importo(saldo) or "0,00"),
+            )
+        verso = "Dare - Avere" if segno > 0 else "Avere - Dare"
+        sotto = f", {len(ids) - 1} sottoconti" if gruppo else ""
+        self._partitario_info.config(
+            text=f"{conto['tipo'].capitalize()}{sotto} · {len(voci)} movimenti · saldo {verso}"
+        )
+        self._partitario_totali.config(
+            text=f"Totale Dare: {format_importo(tot_dare) or '0,00'}  |  "
+                 f"Totale Avere: {format_importo(tot_avere) or '0,00'}  |  "
+                 f"Saldo: {format_importo(saldo) or '0,00'}"
+        )
+
+    def _on_doppio_clic_partitario(self, event):
+        if self.partitario_tree.identify_region(event.x, event.y) == "cell":
+            self._vai_a_registrazione(self.partitario_tree.identify_row(event.y))
+
+    def _vai_a_registrazione(self, iid):
+        """Dal partitario al Libro Giornale, sulla registrazione del movimento."""
+        if not iid:
+            return
+        reg_id = iid.split("-")[0]
+        self.notebook.select(self.giornale_frame)
+        if self.giornale_tree.exists(reg_id):
+            self.giornale_tree.selection_set(reg_id)
+            self.giornale_tree.focus(reg_id)
+            self.giornale_tree.see(reg_id)
+            self.giornale_tree.focus_set()
+
+    def _esporta_partitario(self, formato):
+        conto, ids = self._conti_partitario()
+        if not conto:
+            messagebox.showwarning("Attenzione", "Scegli prima un conto nella scheda Partitari.")
+            return
+        self._on_export("partitari", formato, conto_ids=ids, nome_file=f"partitario_{conto['codice']}")
 
     # --- Status bar ---
 
@@ -487,6 +653,7 @@ class MainWindow:
             self.esercizio_label.config(text="Nessun esercizio selezionato")
         self._refresh_giornale()
         self._refresh_saldi()
+        self._refresh_partitario()
         self._refresh_causali_cache()
 
     # --- Refresh dati ---
@@ -511,31 +678,51 @@ class MainWindow:
             )
 
     def _refresh_saldi(self):
-        for item in self.saldi_tree.get_children():
-            self.saldi_tree.delete(item)
+        """
+        Saldi in forma di albero: il conto padre mostra il totale del gruppo
+        (i suoi movimenti più quelli dei sottoconti); i movimenti registrati
+        direttamente sul padre, se ci sono, hanno una riga a parte.
+        """
+        self.saldi_tree.delete(*self.saldi_tree.get_children())
         if not self.esercizio_id:
             self.totali_label.config(text="")
             return
         rows = self.db.get_saldi(self.esercizio_id)
-        tot_dare = 0
-        tot_avere = 0
+        figli = {}
         for row in rows:
-            dare = row["totale_dare"]
-            avere = row["totale_avere"]
-            saldo = dare - avere
-            tot_dare += dare
-            tot_avere += avere
-            # Indenta i sottoconti
-            nome = row["nome"]
             if row["padre_id"]:
-                nome = "    " + nome
-            self.saldi_tree.insert(
-                "", tk.END,
-                values=(row["codice"], nome, row["tipo"],
-                        format_importo(dare) or "0,00",
-                        format_importo(avere) or "0,00",
-                        format_importo(saldo) or "0,00"),
+                figli.setdefault(row["padre_id"], []).append(row)
+        ids = {row["id"] for row in rows}
+
+        def valori(tipo, dare, avere):
+            return (tipo, format_importo(dare) or "0,00", format_importo(avere) or "0,00",
+                    format_importo(dare - avere) or "0,00")
+
+        tot_dare = sum(row["totale_dare"] for row in rows)
+        tot_avere = sum(row["totale_avere"] for row in rows)
+        for row in rows:
+            if row["padre_id"] in ids:
+                continue  # sottoconto: inserito sotto il suo padre
+            etichetta = f"{row['codice']}   {row['nome']}"
+            sotto = figli.get(row["id"], [])
+            if not sotto:
+                self.saldi_tree.insert("", tk.END, iid=str(row["id"]), text=etichetta,
+                                       values=valori(row["tipo"], row["totale_dare"], row["totale_avere"]))
+                continue
+            dare = row["totale_dare"] + sum(f["totale_dare"] for f in sotto)
+            avere = row["totale_avere"] + sum(f["totale_avere"] for f in sotto)
+            padre = self.saldi_tree.insert(
+                "", tk.END, iid=str(row["id"]), text=etichetta, tags=("gruppo",),
+                open=str(row["id"]) not in self._saldi_chiusi, values=valori(row["tipo"], dare, avere),
             )
+            if round(row["totale_dare"], 2) or round(row["totale_avere"], 2):
+                self.saldi_tree.insert(padre, tk.END, text=f"{row['codice']}   registrato direttamente sul conto",
+                                       tags=("diretto",),
+                                       values=valori(row["tipo"], row["totale_dare"], row["totale_avere"]))
+            for f in sotto:
+                self.saldi_tree.insert(padre, tk.END, iid=str(f["id"]), text=f"{f['codice']}   {f['nome']}",
+                                       values=valori(f["tipo"], f["totale_dare"], f["totale_avere"]))
+
         diff = tot_dare - tot_avere
         self.totali_label.config(
             text=f"Totale Dare: {format_importo(tot_dare) or '0,00'}  |  "
@@ -547,6 +734,8 @@ class MainWindow:
         idx = self.notebook.index(self.notebook.select())
         if idx == 1:
             self._refresh_saldi()
+        elif idx == 2:
+            self._refresh_partitario()
 
     # --- Azioni menu ---
 
@@ -800,7 +989,8 @@ class MainWindow:
                 f"Storno registrato in \"{esercizio['descrizione']}\" come {riferimento}."
             )
 
-    def _on_export(self, tipo, formato):
+    def _on_export(self, tipo, formato, conto_ids=None, nome_file=None):
+        """Export di un report. Con conto_ids (es. dalla scheda Partitari) non chiede quali conti."""
         if not self.esercizio_id:
             messagebox.showwarning("Attenzione", "Selezionare prima un esercizio.")
             return
@@ -811,7 +1001,10 @@ class MainWindow:
 
         # Saldi, costi e ricavi, partitari: tutti i conti oppure solo quelli scelti
         opzioni = {}
-        if tipo != "giornale":
+        if conto_ids is not None:
+            opzioni["conto_ids"] = conto_ids
+            nome_base = nome_file or nome_base
+        elif tipo != "giornale":
             conti = conti_economici(self.db) if tipo == "costi_ricavi" else self.db.get_conti()
             dlg = SelezioneContiDialog(
                 self.root, conti, tipo_label, self._selezioni_export.get(tipo),
@@ -833,7 +1026,7 @@ class MainWindow:
                     nome_base = f"{nome_base}_selezione"
 
         report = crea_report(self.db, self.esercizio_id, tipo, **opzioni)
-        if opzioni and self._selezioni_export.get(tipo) == "economici":
+        if conto_ids is None and opzioni and self._selezioni_export.get(tipo) == "economici":
             report.filtro = "Selezione: conti di costo e ricavo"
         if report.vuoto and tipo != "giornale":
             messagebox.showinfo(

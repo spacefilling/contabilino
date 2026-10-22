@@ -10,7 +10,7 @@ echo Compilazione in corso...
 echo.
 
 python strumenti\versione_exe.py
-pyinstaller --onefile --windowed --name Contabilino --icon risorse\contabilino.ico --hidden-import openpyxl --collect-data sv_ttk --version-file versione_exe.txt main.py
+pyinstaller --onefile --windowed --name Contabilino --icon risorse\contabilino.ico --hidden-import openpyxl --version-file versione_exe.txt --add-data "risorse\contabilino.ico;risorse" main.py
 
 echo.
 echo === Build completata ===

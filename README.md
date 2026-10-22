@@ -23,9 +23,9 @@
 - **Esercizi contabili con periodo libero**, anche a cavallo tra due anni (es. 01/07/2026 – 30/06/2027), da aprire e chiudere.
 - **Riporto dei saldi**: creando un nuovo esercizio, il programma propone di riportare i saldi di cassa, banca, crediti e debiti, con la differenza (utile compreso) su un conto di patrimonio netto.
 - **Numerazione in ordine di data**: se registri un'operazione con una data precedente all'ultima, il programma chiede se rinumerare il giornale.
-- **Saldi conti** con verifica della quadratura Dare/Avere.
+- **Saldi conti ad albero**: ogni conto padre con il totale del gruppo e i sottoconti da aprire e chiudere, con verifica della quadratura Dare/Avere.
 - **Costi e ricavi**: solo i conti di costo e di ricavo, con il totale di ogni gruppo e il risultato dell'esercizio (utile o perdita).
-- **Partitari**: per ogni conto (clienti, fornitori, banca, costi, ricavi…) i movimenti con data, numero, causale, contropartita, Dare, Avere e saldo progressivo.
+- **Partitari**: una scheda per consultare i movimenti di un conto (clienti, fornitori, banca, costi, ricavi…) con data, numero, causale, contropartita, Dare, Avere e saldo progressivo, e l'export di tutti i partitari.
 - **Scelta dei conti da esportare**: tutti, oppure quelli spuntati in un elenco, anche per intervallo di codici (es. da 401 a 449) o cercandoli per nome.
 - **Export in CSV, Excel e PDF** di tutti i report. Il PDF è pronto da stampare o da mandare al commercialista.
 
@@ -80,13 +80,13 @@ pip install -r requirements.txt
 python main.py
 ```
 
-Dipendenze: `openpyxl` (export Excel), `reportlab` (export PDF), `sv-ttk` (tema grafico in stile Windows 11), `pyinstaller` (solo per creare l'eseguibile).
+Dipendenze: `openpyxl` (export Excel), `reportlab` (export PDF), `pyinstaller` (solo per creare l'eseguibile).
 
 ### Creare l'eseguibile
 
 ```bash
 python strumenti/versione_exe.py
-pyinstaller --onefile --windowed --name Contabilino --icon risorse/contabilino.ico --hidden-import openpyxl --collect-data sv_ttk --version-file versione_exe.txt main.py
+pyinstaller --onefile --windowed --name Contabilino --icon risorse/contabilino.ico --hidden-import openpyxl --version-file versione_exe.txt --add-data "risorse/contabilino.ico;risorse" main.py
 ```
 
 Su Windows c'è anche [`build.bat`](build.bat). Ogni tag `vX.Y` pubblicato su GitHub avvia la [build automatica](.github/workflows/build.yml) dell'`.exe` e lo allega alla release.
@@ -94,7 +94,7 @@ Su Windows c'è anche [`build.bat`](build.bat). Ogni tag `vX.Y` pubblicato su Gi
 | File | Contenuto |
 | --- | --- |
 | `main.py` | avvio, scelta o creazione del database |
-| `tema.py` | aspetto in stile Windows 11 (tema Sun Valley), font, zoom dello schermo, icona |
+| `tema.py` | aspetto in stile Windows 11, font, zoom dello schermo, icona |
 | `ui.py` | finestra principale: libro giornale, saldi, menu |
 | `dialogs.py` | esercizi, piano dei conti, eliminazione e storno, scelta dei conti da esportare |
 | `widgets.py` | campi data, importo e autocompletamento |

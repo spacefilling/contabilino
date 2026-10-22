@@ -127,22 +127,45 @@ def report_giornale(db, esercizio_id):
 
 
 def report_saldi(db, esercizio_id, conto_ids=None):
+    """
+    Saldi di tutti i conti (o di quelli scelti), come nella scheda Saldi Conti:
+    un conto con sottoconti riporta in grassetto il totale del gruppo, con sotto
+    i sottoconti e l'eventuale riga dei movimenti registrati direttamente sul padre.
+    Il totale in fondo somma ogni conto una volta sola.
+    """
     rows = db.get_saldi(esercizio_id)
     if conto_ids is not None:
         scelti = set(conto_ids)
         rows = [r for r in rows if r["id"] in scelti]
+    ids = {r["id"] for r in rows}
+    figli = {}
+    for r in rows:
+        if r["padre_id"] in ids:
+            figli.setdefault(r["padre_id"], []).append(r)
+
+    def riga(r, nome=None, dare=None, avere=None, **opzioni):
+        dare = r["totale_dare"] if dare is None else dare
+        avere = r["totale_avere"] if avere is None else avere
+        return Riga([r["codice"], nome or r["nome"], r["tipo"], dare, avere, dare - avere], **opzioni)
+
     righe = []
-    tot_dare = 0
-    tot_avere = 0
-    for row in rows:
-        dare = row["totale_dare"]
-        avere = row["totale_avere"]
-        tot_dare += dare
-        tot_avere += avere
-        righe.append(Riga(
-            [row["codice"], row["nome"], row["tipo"], dare, avere, dare - avere],
-            rientro=1 if row["padre_id"] else 0,
-        ))
+    for r in rows:
+        if r["padre_id"] in ids:
+            continue  # sottoconto: compare sotto il suo padre
+        sotto = figli.get(r["id"], [])
+        if not sotto:
+            # Conto senza sottoconti (o sottoconto scelto senza il suo padre)
+            righe.append(riga(r, rientro=1 if r["padre_id"] else 0))
+            continue
+        dare = r["totale_dare"] + sum(f["totale_dare"] for f in sotto)
+        avere = r["totale_avere"] + sum(f["totale_avere"] for f in sotto)
+        righe.append(riga(r, dare=dare, avere=avere, grassetto=True))
+        if _ha_movimenti(r):
+            righe.append(riga(r, nome="registrato direttamente sul conto", rientro=1))
+        righe.extend(riga(f, rientro=1) for f in sotto)
+
+    tot_dare = sum(r["totale_dare"] for r in rows)
+    tot_avere = sum(r["totale_avere"] for r in rows)
     righe.append(Riga(["", "TOTALE", "", tot_dare, tot_avere, tot_dare - tot_avere], grassetto=True))
     return Report(
         titolo="Saldi Conti",
@@ -156,7 +179,8 @@ def report_saldi(db, esercizio_id, conto_ids=None):
             Colonna("Saldo", "importo", 14),
         ],
         sezioni=[Sezione(righe)],
-        note="Saldo = Totale Dare - Totale Avere.",
+        note="Saldo = Totale Dare - Totale Avere. Un conto con sottoconti riporta in grassetto "
+             "il totale del gruppo; il TOTALE in fondo conta ogni conto una volta sola.",
         nome_foglio="Saldi Conti",
         vuoto=not rows,
         filtro=_descrivi_selezione(db, conto_ids),
@@ -275,19 +299,7 @@ def report_partitari(db, esercizio_id, conto_ids=None):
     if conto_ids is not None:
         scelti = set(conto_ids)
         conti = [c for c in conti if c["id"] in scelti]
-    movimenti = {c["id"]: [] for c in conti}
-
-    # Ogni registrazione ha un conto in Dare e uno in Avere: finisce nel partitario
-    # di ciascuno dei due, con l'altro come contropartita.
-    for reg in db.get_registrazioni_compatte(esercizio_id):
-        if reg["dare_conto_id"] in movimenti:
-            movimenti[reg["dare_conto_id"]].append(
-                (reg, _conto(reg["avere_codice"], reg["avere_nome"]), reg["importo"], 0)
-            )
-        if reg["avere_conto_id"] in movimenti:
-            movimenti[reg["avere_conto_id"]].append(
-                (reg, _conto(reg["dare_codice"], reg["dare_nome"]), 0, reg["importo"])
-            )
+    movimenti = movimenti_partitario(db, esercizio_id, [c["id"] for c in conti])
 
     sezioni = []
     piatte = []
@@ -333,6 +345,26 @@ def report_partitari(db, esercizio_id, conto_ids=None):
         vuoto=not sezioni,
         filtro=_descrivi_selezione(db, conto_ids),
     )
+
+
+def movimenti_partitario(db, esercizio_id, conto_ids):
+    """
+    Movimenti dei conti indicati nell'esercizio, in ordine di data e numero:
+    {conto_id: [(registrazione, contropartita, dare, avere), ...]}.
+    Ogni registrazione ha un conto in Dare e uno in Avere: finisce nel partitario
+    di ciascuno dei due, con l'altro come contropartita.
+    """
+    movimenti = {cid: [] for cid in conto_ids}
+    for reg in db.get_registrazioni_compatte(esercizio_id):
+        if reg["dare_conto_id"] in movimenti:
+            movimenti[reg["dare_conto_id"]].append(
+                (reg, _conto(reg["avere_codice"], reg["avere_nome"]), reg["importo"], 0)
+            )
+        if reg["avere_conto_id"] in movimenti:
+            movimenti[reg["avere_conto_id"]].append(
+                (reg, _conto(reg["dare_codice"], reg["dare_nome"]), 0, reg["importo"])
+            )
+    return movimenti
 
 
 REPORT = {

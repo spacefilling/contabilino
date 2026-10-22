@@ -15,7 +15,7 @@ permalink: /manuale/
   <li><a href="#piano-dei-conti">Piano dei conti</a></li>
   <li><a href="#registrare-unoperazione">Registrare un'operazione</a></li>
   <li><a href="#correggere-eliminare-o-stornare">Correggere, eliminare o stornare</a></li>
-  <li><a href="#saldi-conti">Saldi conti</a></li>
+  <li><a href="#saldi-conti">Saldi conti e partitari</a></li>
   <li><a href="#report-ed-export">Report ed export</a></li>
   <li><a href="#scorciatoie-da-tastiera">Scorciatoie da tastiera</a></li>
   <li><a href="#dati-backup-e-chiavetta-usb">Dati, backup e chiavetta USB</a></li>
@@ -84,7 +84,7 @@ La finestra del riporto mostra i saldi che verranno registrati e chiede il **con
 - conto di attivo (es. Banca 5.350,00 in Dare): Dare Banca, Avere Patrimonio netto;
 - conto di passivo (es. Debiti fornitori 1.200,00 in Avere): Dare Patrimonio netto, Avere Debiti fornitori.
 
-![Finestra del riporto dei saldi con anteprima delle registrazioni]({{ '/assets/schermate/05-riporto-saldi.png' | relative_url }}){: .esempio width="460"}
+![Finestra del riporto dei saldi con anteprima delle registrazioni]({{ '/assets/schermate/06-riporto-saldi.png' | relative_url }}){: .esempio width="460"}
 
 Alla fine il patrimonio netto ha come saldo la differenza tra attività e passività, cioè il capitale più gli utili (o meno le perdite) accumulati. I conti di costo e ricavo non si riportano: ogni esercizio ha i suoi.
 
@@ -123,7 +123,7 @@ Il report Costi e Ricavi mostra così il totale di ogni fornitore e cliente, e i
 
 I pagamenti e gli incassi però passano da Banca, Cassa, 200 Debiti fornitori e 300 Crediti clienti. Se ti serve sapere quanto resta da pagare o da incassare a ciascuno, crea un sottoconto per fornitore anche sotto 200 (e per cliente sotto 300) e registra lì fatture e pagamenti: il partitario di quel sottoconto mostra il debito o il credito ancora aperto.
 
-I livelli sono due, conto e sottoconto: un sottoconto non può avere a sua volta sottoconti.
+I livelli sono due, conto e sottoconto: un sottoconto non può avere a sua volta sottoconti. Nella finestra del piano dei conti i sottoconti stanno rientrati sotto il conto padre (che si apre e si chiude con la freccia), la colonna *Sottoconti* dice quanti ne ha, e un doppio clic apre la modifica.
 
 Lasciando dei numeri liberi tra un gruppo e l'altro (es. 401–449 materie prime, 450–499 servizi) diventa facile esportare un gruppo intero con l'[intervallo di codici](#scelta-dei-conti).
 
@@ -182,11 +182,19 @@ Invece di cancellare, aggiunge una nuova registrazione con gli stessi conti inve
 
 Lo storno va nell'esercizio che contiene la data scelta, che deve essere aperto. Così si può correggere anche una registrazione di un esercizio già chiuso.
 
-## 7. Saldi conti {#saldi-conti}
+## 7. Saldi conti e partitari {#saldi-conti}
 
-La scheda **Saldi Conti** mostra per ogni conto il totale Dare, il totale Avere e il saldo (Dare − Avere), con i sottoconti rientrati sotto il conto padre. Il saldo ha sempre lo stesso verso: per i conti di passivo e di ricavo un saldo normale è negativo (vedi [Limiti](#limiti-da-conoscere)).
+La scheda **Saldi Conti** mostra per ogni conto il totale Dare, il totale Avere e il saldo (Dare − Avere), ad albero: un conto con sottoconti riporta in grassetto il **totale del gruppo** e si apre (o si chiude) con la freccia per vedere i sottoconti. I movimenti registrati direttamente sul conto padre, se ci sono, hanno una riga a parte. **Espandi tutto** e **Comprimi tutto** aprono o chiudono tutti i gruppi; un doppio clic su un conto apre il suo partitario. Il saldo ha sempre lo stesso verso: per i conti di passivo e di ricavo un saldo normale è negativo (vedi [Limiti](#limiti-da-conoscere)).
 
 ![Scheda Saldi Conti]({{ '/assets/schermate/03-saldi-conti.png' | relative_url }}){: .esempio} In fondo ci sono i totali generali: il totale Dare deve essere uguale al totale Avere.
+
+### Scheda Partitari {#scheda-partitari}
+
+Nella scheda **Partitari** scrivi o scegli un conto: compaiono i suoi movimenti dell'esercizio con data, numero, causale, contropartita, Dare, Avere e **saldo progressivo** nel verso naturale del conto (Dare − Avere per attivo e costi, Avere − Dare per passivo e ricavi). Per un conto padre compaiono anche i movimenti dei sottoconti, con la colonna *Sottoconto*. In fondo ci sono i totali.
+
+Un doppio clic su un movimento apre la registrazione nel **Libro Giornale**. Con **Esporta** il partitario mostrato si salva in CSV, Excel o PDF.
+
+![Scheda Partitari]({{ '/assets/schermate/04-partitari.png' | relative_url }}){: .esempio}
 
 ## 8. Report ed export {#report-ed-export}
 
@@ -224,7 +232,7 @@ Per **Saldi Conti**, **Costi e Ricavi** e **Partitari**, prima di salvare si sce
   - **Codici da … a …** e **Spunta intervallo**: spunta tutti i conti con il codice in quell'intervallo, per esempio da 401 a 449;
   - **Cerca**: mostra solo i conti che contengono il testo nel codice o nel nome, e **Spunta tutti quelli in elenco** spunta quelli trovati.
 
-![Scelta dei conti da esportare]({{ '/assets/schermate/04-scelta-conti.png' | relative_url }}){: .esempio width="420"}
+![Scelta dei conti da esportare]({{ '/assets/schermate/05-scelta-conti.png' | relative_url }}){: .esempio width="420"}
 
 I metodi si combinano: per esempio un intervallo di fornitori più due clienti cercati per nome. Per Costi e Ricavi l'elenco comprende solo i conti di costo e ricavo, per Saldi Conti e Partitari tutti i conti.
 
@@ -291,7 +299,7 @@ Per creare l'eseguibile Windows:
 
 ```bash
 python strumenti/versione_exe.py
-pyinstaller --onefile --windowed --name Contabilino --icon risorse/contabilino.ico --hidden-import openpyxl --collect-data sv_ttk --version-file versione_exe.txt main.py
+pyinstaller --onefile --windowed --name Contabilino --icon risorse/contabilino.ico --hidden-import openpyxl --version-file versione_exe.txt --add-data "risorse/contabilino.ico;risorse" main.py
 ```
 
 L'eseguibile si trova in `dist\Contabilino.exe`. Su Windows lo stesso si ottiene con `build.bat`. Le release su GitHub vengono compilate in automatico a ogni nuova versione.

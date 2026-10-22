@@ -40,20 +40,25 @@ Contabilino è un piccolo programma per chi deve tenere una contabilità in **pa
 - **Piano dei conti con sottoconti**: un sottoconto per ogni cliente e fornitore.
 - **Esercizi contabili** con periodo libero, anche a cavallo tra due anni, e **riporto dei saldi** di apertura nel nuovo esercizio.
 - **Numerazione in ordine di data**, con la proposta di rinumerare quando registri un'operazione arretrata.
-- **Saldi conti** con verifica della quadratura Dare/Avere.
+- **Saldi conti ad albero**, con il totale di ogni gruppo e la verifica della quadratura Dare/Avere.
 - **Costi e ricavi** con totali per gruppo e risultato dell'esercizio.
-- **Partitari** di qualsiasi conto (clienti, fornitori, banca, costi, ricavi) con saldo progressivo.
+- **Partitari** di qualsiasi conto (clienti, fornitori, banca, costi, ricavi) con saldo progressivo, da consultare in una scheda e da esportare.
 - **Export in CSV, Excel e PDF**, per tutti i conti o solo per quelli scelti.
 
 ## Schermate
 
 <figure class="figura">
-  <img class="esempio" src="{{ '/assets/schermate/03-saldi-conti.png' | relative_url }}" alt="Scheda Saldi Conti con totale Dare, totale Avere e saldo di ogni conto">
-  <figcaption>Saldi Conti: totali e saldo di ogni conto, con la verifica della quadratura.</figcaption>
+  <img class="esempio" src="{{ '/assets/schermate/03-saldi-conti.png' | relative_url }}" alt="Scheda Saldi Conti ad albero con il totale di ogni gruppo">
+  <figcaption>Saldi Conti: conti e sottoconti ad albero, con il totale di ogni gruppo e la verifica della quadratura.</figcaption>
 </figure>
 
 <figure class="figura">
-  <img class="esempio" src="{{ '/assets/schermate/04-scelta-conti.png' | relative_url }}" alt="Scelta dei conti da esportare con caselle di spunta e intervallo di codici" width="420">
+  <img class="esempio" src="{{ '/assets/schermate/04-partitari.png' | relative_url }}" alt="Scheda Partitari con i movimenti di un fornitore e il saldo progressivo">
+  <figcaption>Partitari: i movimenti di un conto con saldo progressivo; doppio clic per aprire la registrazione.</figcaption>
+</figure>
+
+<figure class="figura">
+  <img class="esempio" src="{{ '/assets/schermate/05-scelta-conti.png' | relative_url }}" alt="Scelta dei conti da esportare con caselle di spunta e intervallo di codici" width="420">
   <figcaption>Scelta dei conti da esportare: tutti, solo costi e ricavi, o quelli spuntati.</figcaption>
 </figure>
 
