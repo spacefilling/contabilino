@@ -10,7 +10,7 @@ locale: it_IT
 author: spacefiller
 logo: /assets/logo.png
 image: /assets/social-preview.png
-version: "1.4"
+version: "1.5"
 repository_url: https://github.com/spacefilling/contabilino
 download_url: https://github.com/spacefilling/contabilino/releases/latest/download/Contabilino.exe
 

@@ -1,6 +1,6 @@
 # Changelog
 
-## Non ancora rilasciato
+## 1.5 – 2026-10-22
 
 - Aspetto in stile Windows 11 (tema Sun Valley, font Segoe UI, pulsanti principali in evidenza) e intestazione con logo ed esercizio attivo.
 - Testo nitido con lo zoom di Windows (125%, 150%…); la finestra si adatta allo schermo.

@@ -3,27 +3,13 @@
 Programma autonomo per Windows: registra costi e ricavi in partita doppia, gestisce gli esercizi contabili, mostra i saldi dei conti ed esporta in CSV, Excel e PDF. **Non richiede installazione né Python**: un solo file da avviare.
 
 ### 🆕 Novità di questa versione
-**Report ed export**
-- **Export in PDF** di tutti i report, pronto da stampare o inviare (A4, intestazioni ripetute su ogni pagina, numero di pagina).
-- **Nuovo report Costi e Ricavi**: solo i conti di costo e di ricavo, con il totale per gruppo (es. 400 con i suoi sottoconti) e il risultato dell'esercizio (utile o perdita).
-- **Nuovi Partitari**: per ogni conto (fornitori, clienti, banca, costi, ricavi…) i movimenti con data, numero, causale, contropartita, Dare, Avere e saldo progressivo. È proposta la scelta "solo i conti di costo e ricavo".
-- **Scelta dei conti da esportare** (Saldi Conti, Costi e Ricavi, Partitari): tutti, oppure solo quelli spuntati, uno alla volta, per intervallo di codici (es. da 401 a 449) o cercandoli per nome. Spuntando un conto padre si spuntano anche i suoi sottoconti.
-- Menu **Export** con una voce per report e i tre formati CSV, Excel, PDF. L'Excel ha titolo ed esercizio in alto ed è impostato per la stampa.
-
-**Esercizi e numerazione**
-- **Riporto dei saldi**: creando un nuovo esercizio il programma chiede se riportare i saldi di cassa, banca, crediti e debiti dall'esercizio precedente, con la differenza su un conto di patrimonio netto. C'è anche il pulsante **Riporta saldi…** in Gestione Esercizi.
-- **Numerazione in ordine di data**: se registri un'operazione con una data precedente all'ultima, il programma chiede se rinumerare il giornale. Comando anche in **Esercizio → Rinumera in ordine di data**.
-- Chiusura e riapertura di un esercizio chiedono conferma; il periodo di un esercizio chiuso non si può più cambiare.
-
-**Correzioni**
-- Un nuovo sottoconto eredita davvero il tipo del conto padre (prima veniva proposto COSTO). Avviso se si sceglie un tipo diverso dal padre, o se si cambia il tipo di un conto che ha già movimenti.
-- Non si possono più creare sottoconti di sottoconti, che sparivano dai totali.
-- Campo importo: Incolla e Taglia aggiornano davvero l'importo (prima il campo poteva mostrare un valore e salvarne un altro).
-- Una registrazione non può più restare salvata a metà se il database dà errore (es. chiavetta scollegata).
-- Date compatte: `25122026` ora è il 25/12/2026 (prima le date dal 19 al 31 in formato GGMMAAAA venivano rifiutate); `1/2/26` vale 2026.
-- Niente più "-0,00" in tabelle ed export; formato degli importi in Excel corretto.
-- Nei nuovi database il conto 300 Crediti clienti è di tipo ATTIVO (prima PASSIVO). Nei database esistenti si può correggere da Conti → Gestione Piano dei Conti.
-- Nessuna modifica alla struttura del database: gli archivi esistenti si usano così come sono.
+- **Nuovo aspetto in stile Windows 11**: tema chiaro e pulito, font Segoe UI, pulsanti principali in evidenza, intestazione con il logo e l'esercizio attivo (con il pulsante **Esercizi…** per cambiarlo).
+- **Testo nitido sugli schermi con zoom** (125%, 150%…): prima Windows ingrandiva la finestra sfocandola. La finestra si adatta sempre allo schermo.
+- **Logo di Contabilino** come icona della finestra, della barra delle applicazioni e del file `Contabilino.exe`.
+- **Tendina dei conti corretta**: si chiude passando a un altro campo, con un clic in un altro punto della finestra o passando a un altro programma (prima restava aperta fino a "Pulisci").
+- Scelta dei conti da esportare con caselle di spunta in stile Windows 11.
+- Database di esempio più realistico, con incassi, pagamenti e versamenti in banca.
+- Nessuna modifica al database: gli archivi esistenti si usano così come sono.
 
 ### ⬇️ Download
 Scarica **`Contabilino.exe`** dalla sezione *Assets* qui sotto.
